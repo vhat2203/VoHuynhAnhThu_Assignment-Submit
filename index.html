@@ -6,12 +6,12 @@
   <title>Quiz App</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/canvas-confetti.browser.min.js"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap"
+    href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
     rel="stylesheet"
   />
 
@@ -27,18 +27,16 @@
       cursor: url("assets/cursor-small.png") 0 0, auto;
     }
 
-    button,
-    .clickable {
-      cursor: url("assets/cursor-click.png") 0 0, pointer;
+    button, .clickable, a {
+      cursor: url("assets/cursor-click.png") 0 0, pointer !important;
     }
 
-    body.is-loading,
-    .loading-state {
-      cursor: url("assets/cursor-loading.png") 0 0, wait;
+    body.is-loading, .loading-state, button:active {
+      cursor: url("assets/cursor-loading.png") 0 0, wait !important;
     }
 
     .font-pixel {
-      font-family: "Press Start 2P", monospace;
+      font-family: "VT323", monospace;
     }
 
     @keyframes mascot-shake {
@@ -60,288 +58,179 @@
       animation: ending-message-in 0.45s ease-out both;
     }
 
-    /* Đặt nút Menu 3 gạch ở vị trí an toàn, không che icon ngôi nhà */
-    #menu-toggle-btn {
+    #menu-toggle-btn-floating {
       position: fixed;
-      top: 5.5rem;
-      right: 1rem;
+      top: 1.5rem;
+      right: 1.5rem;
       z-index: 50;
     }
 
-    @media (max-width: 768px) {
-      #intro-screen,
-      #home-screen {
+    /* Đổi mốc max-width chuẩn lên 1279px để tất cả dòng iPad và Tablet nằm trọn ở layout dọc */
+    @media (max-width: 1279px) {
+      #intro-screen, #home-screen {
         padding: 1.25rem;
       }
-
-      #intro-next-btn,
-      #intro-previous-btn,
-      #home-start-btn {
-        font-size: 1.25rem;
-        padding: 1rem 1.5rem;
-      }
-
-      #quiz-card {
-        padding: 0.5rem;
-        gap: 0.5rem;
-      }
-
-      #quiz-card .col-span-8,
-      #quiz-card .col-span-4 {
-        grid-column: span 12 / span 12;
-      }
-
-      #quiz-card .col-span-4 {
-        max-height: 16rem;
-      }
-
-      #quiz-card #question-text {
-        font-size: 1.75rem;
-      }
-
-      #quiz-card #options-container {
-        gap: 0.5rem;
-      }
-    }
-
-    @media (max-width: 480px) {
-      #quiz-card #options-container {
-        grid-template-columns: 1fr;
-        grid-template-rows: repeat(4, minmax(0, 1fr));
-      }
-
-      #quiz-card .font-pixel {
-        font-size: 0.8rem;
+      #menu-toggle-btn-floating {
+        top: 1rem;
+        right: 1rem;
       }
     }
   </style>
 </head>
 <body class="bg-sky-200 h-screen w-full overflow-hidden">
 
-  <!-- Nút 3 gạch ngang mở cài đặt -->
   <button
-    id="menu-toggle-btn"
+    id="menu-toggle-btn-floating"
     type="button"
     aria-label="Open Settings"
-    class="font-pixel px-3 py-3 text-base bg-white text-black border-4 border-black shadow-[4px_4px_0_0_#000] hover:bg-slate-100 flex flex-col justify-between w-12 h-12 items-center"
+    class="font-pixel aspect-square h-12 md:h-14 bg-white text-black border-4 border-black shadow-[4px_4px_0_0_#000] hover:bg-slate-100 flex flex-col justify-center items-center gap-1.5 active:translate-y-[2px] active:shadow-[2px_2px_0_0_#000] transition-all"
   >
-    <span class="w-full h-1 bg-black"></span>
-    <span class="w-full h-1 bg-black"></span>
-    <span class="w-full h-1 bg-black"></span>
+    <span class="w-6 h-1 bg-black"></span>
+    <span class="w-6 h-1 bg-black"></span>
+    <span class="w-6 h-1 bg-black"></span>
   </button>
 
-  <!-- Cửa sổ Pixel Settings Modal -->
   <div id="settings-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
-    <div class="bg-white border-4 border-black shadow-[8px_8px_0_0_#000] w-96 p-6 flex flex-col gap-6">
+    <div class="bg-white border-[6px] border-black shadow-[8px_8px_0_0_#000] w-96 max-w-[90vw] p-6 flex flex-col gap-6 font-pixel">
       <div class="flex justify-between items-center border-b-4 border-black pb-3">
-        <h2 class="font-pixel text-lg text-black">⚙️ SETTINGS</h2>
-        <button id="close-settings-btn" class="font-pixel px-2 py-1 bg-red-500 text-white border-2 border-black hover:bg-red-400 text-xs">X</button>
+        <h2 class="font-bold text-3xl text-black">⚙️ SETTINGS</h2>
+        <button id="close-settings-btn" class="px-3 py-1 bg-red-500 text-white border-[3px] border-black shadow-[2px_2px_0_0_#000] active:translate-y-[2px] active:shadow-none hover:bg-red-400 text-xl font-bold transition-all">X</button>
       </div>
       <div class="flex flex-col gap-4">
-        <div class="flex justify-between items-center bg-slate-100 border-2 border-black p-3">
-          <span class="font-pixel text-xs">Background Music</span>
-          <button id="toggle-bgm" class="font-pixel px-4 py-2 text-xs bg-emerald-400 text-black border-2 border-black shadow-[2px_2px_0_0_#000]">ON</button>
+        <div class="flex justify-between items-center bg-slate-100 border-[3px] border-black p-3 font-semibold">
+          <span class="text-2xl">Nhạc nền (BGM)</span>
+          <button id="toggle-bgm" class="px-4 py-2 text-xl bg-emerald-400 text-black border-[3px] border-black shadow-[2px_2px_0_0_#000] active:translate-y-[2px] active:shadow-none transition-all">ON</button>
         </div>
-        <div class="flex justify-between items-center bg-slate-100 border-2 border-black p-3">
-          <span class="font-pixel text-xs">Sound Effects (SFX)</span>
-          <button id="toggle-sfx" class="font-pixel px-4 py-2 text-xs bg-emerald-400 text-black border-2 border-black shadow-[2px_2px_0_0_#000]">ON</button>
+        <div class="flex justify-between items-center bg-slate-100 border-[3px] border-black p-3 font-semibold">
+          <span class="text-xl">Hiệu ứng (SFX)</span>
+          <button id="toggle-sfx" class="px-4 py-2 text-xl bg-emerald-400 text-black border-[3px] border-black shadow-[2px_2px_0_0_#000] active:translate-y-[2px] active:shadow-none transition-all">ON</button>
         </div>
       </div>
     </div>
   </div>
 
   <main class="w-full h-screen overflow-hidden">
-    <!-- Home Screen -->
-    <section
-      id="home-screen"
-      class="w-full h-screen flex flex-col items-center justify-center gap-8 p-8"
-    >
-      <img
-        src="assets/together.png"
-        alt="Ginger Cat and Gray Cat together"
-        class="w-full max-w-3xl max-h-[65vh] object-contain"
-      />
-      <button
-        id="home-start-btn"
-        type="button"
-        class="font-pixel px-12 py-6 text-3xl bg-pink-500 text-white border-4 border-black shadow-[6px_6px_0_0_#000]
-               hover:bg-pink-400 active:translate-x-[3px] active:translate-y-[3px]
-               active:shadow-[3px_3px_0_0_#000] transition-all duration-100
-               focus:outline-none focus:ring-2 focus:ring-pink-300"
-      >
-        Start
+    <section id="home-screen" class="w-full h-screen flex flex-col items-center justify-center gap-8 p-8">
+      <img src="assets/together.png" alt="Ginger Cat and Gray Cat together" class="w-full max-w-3xl max-h-[65vh] object-contain" />
+      <button id="home-start-btn" type="button" class="font-pixel px-12 py-6 text-3xl md:text-5xl font-bold bg-pink-500 text-white border-4 md:border-[6px] border-black shadow-[6px_6px_0_0_#000] md:shadow-[8px_8px_0_0_#000] hover:bg-pink-400 active:translate-y-[4px] active:shadow-none transition-all duration-100 tracking-wide">
+        BẮT ĐẦU
       </button>
     </section>
 
-    <!-- Intro Screen -->
-    <section
-      id="intro-screen"
-      class="hidden w-full min-h-screen flex flex-col items-center justify-center p-8 relative"
-    >
-      <div id="intro-step-content" class="flex-1 w-full flex items-center"></div>
-
-      <button
-        id="intro-previous-btn"
-        type="button"
-        class="hidden font-pixel absolute bottom-12 left-12 text-3xl px-12 py-6
-               bg-slate-400 text-black border-4 border-black shadow-[8px_8px_0_0_#000]
-               hover:bg-slate-300 active:translate-x-[3px] active:translate-y-[3px]
-               active:shadow-[3px_3px_0_0_#000] transition-all duration-100"
-      >
-        🡨 Previous
+    <section id="intro-screen" class="hidden w-full min-h-screen flex flex-col items-center justify-center p-4 md:p-8 relative">
+      <div id="intro-step-content" class="flex-1 w-full flex items-center justify-center"></div>
+      <button id="intro-previous-btn" type="button" class="hidden font-pixel font-bold absolute bottom-6 left-4 md:bottom-12 md:left-12 text-xl md:text-4xl px-6 py-4 md:px-10 md:py-5 bg-slate-400 text-black border-4 md:border-[6px] border-black shadow-[4px_4px_0_0_#000] md:shadow-[8px_8px_0_0_#000] hover:bg-slate-300 active:translate-y-[4px] active:shadow-none transition-all duration-100">
+        🡨 Quay lại
       </button>
-
-      <button
-        id="intro-next-btn"
-        type="button"
-        class="font-pixel absolute bottom-12 right-12 text-3xl px-12 py-6
-               bg-pink-500 text-white border-4 border-black shadow-[6px_6px_0_0_#000000]
-               hover:bg-pink-400 active:translate-x-[3px] active:translate-y-[3px]
-               active:shadow-[3px_3px_0_0_#000000] transition-all duration-100"
-      >
-        Next ➔
+      <button id="intro-next-btn" type="button" class="font-pixel font-bold absolute bottom-6 right-4 md:bottom-12 md:right-12 text-xl md:text-4xl px-6 py-4 md:px-10 md:py-5 bg-pink-500 text-white border-4 md:border-[6px] border-black shadow-[4px_4px_0_0_#000] md:shadow-[8px_8px_0_0_#000] hover:bg-pink-400 active:translate-y-[4px] active:shadow-none transition-all duration-100">
+        Tiếp tục ➔
       </button>
     </section>
 
-    <!-- Quiz Screen -->
-    <section id="quiz-card" class="hidden w-full h-screen overflow-hidden flex flex-col p-3 gap-3 box-border">
-      <div class="w-full flex-1 min-h-0 flex flex-col gap-1">
-        <div id="racing-track" class="shrink-0 py-1 px-2 mb-1 border-4 border-black bg-white shadow-[6px_6px_0_0_#000]">
-          <div class="flex justify-between items-end px-1 mb-[-4px]">
-            <img src="assets/bakery.png" alt="Bakery milestone" class="w-14 h-14 object-contain" />
-            <img src="assets/house.png" alt="Shared finish milestone" class="w-14 h-14 object-contain" />
+    <section id="quiz-card" class="hidden w-full h-screen overflow-hidden flex flex-col p-3 md:p-6 gap-3 md:gap-5 max-w-5xl mx-auto xl:max-w-none box-border">
+      
+      <header class="shrink-0 w-full flex items-stretch gap-3 md:gap-5 h-16 md:h-24 z-10">
+        <div id="racing-track" class="flex-1 bg-white border-4 md:border-[6px] border-black shadow-[4px_4px_0_0_#000] md:shadow-[8px_8px_0_0_#000] p-1.5 md:p-3 flex flex-col justify-center gap-1 md:gap-2">
+          <div class="flex justify-between items-end px-2 md:px-4 mb-[-4px] md:mb-[-8px] relative z-10">
+            <img src="assets/bakery.png" alt="Bakery milestone" class="w-6 h-6 md:w-12 md:h-12 object-contain" />
+            <img src="assets/house.png" alt="Shared finish milestone" class="w-6 h-6 md:w-12 md:h-12 object-contain" />
           </div>
-          <div class="flex flex-col gap-1">
-            <div class="flex items-center gap-3">
-              <div class="relative flex-1 h-14 bg-sky-100 border-4 border-black">
-                <div class="absolute inset-x-8 top-1/2 border-t-4 border-dashed border-slate-600"></div>
-                <img
-                  id="graycat-racer"
-                  src="assets/graycat_running.png"
-                  alt="Gray Cat racer"
-                  class="absolute left-0 top-1/2 -translate-y-1/2 w-14 h-14 object-contain transition-all duration-500 ease-out"
-                  style="left: 0%"
-                />
-              </div>
-            </div>
-            <div class="flex items-center gap-3">
-              <div class="relative flex-1 h-14 bg-pink-100 border-4 border-black">
-                <div class="absolute inset-x-8 top-1/2 border-t-4 border-dashed border-slate-600"></div>
-                <img
-                  id="gingercat-racer"
-                  src="assets/gingercat_walk.png"
-                  class="absolute left-0 top-1/2 -translate-y-1/2 w-14 h-14 object-contain transition-all duration-500 ease-out"
-                  style="left: 0%"
-                />
-              </div>
-            </div>
+          <div class="relative h-5 md:h-8 bg-sky-50 border-2 md:border-4 border-black">
+            <div class="absolute inset-x-4 md:inset-x-8 top-1/2 border-t-[2px] md:border-t-4 border-dashed border-slate-600/40"></div>
+            <img id="graycat-racer" src="assets/graycat_running.png" alt="Gray Cat racer" class="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 md:w-12 md:h-12 object-contain transition-all duration-500 ease-out z-20" style="left: 0%" />
+          </div>
+          <div class="relative h-5 md:h-8 bg-pink-50 border-2 md:border-4 border-black mt-0.5 md:mt-1">
+            <div class="absolute inset-x-4 md:inset-x-8 top-1/2 border-t-[2px] md:border-t-4 border-dashed border-slate-600/40"></div>
+            <img id="gingercat-racer" src="assets/gingercat_walk.png" alt="Ginger Cat racer" class="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 md:w-12 md:h-12 object-contain transition-all duration-500 ease-out z-20" style="left: 0%" />
           </div>
         </div>
+        
+        <button
+          id="menu-toggle-btn-quiz"
+          type="button"
+          aria-label="Open Settings"
+          class="shrink-0 aspect-square h-full bg-slate-200 border-4 md:border-[6px] border-black shadow-[4px_4px_0_0_#000] md:shadow-[8px_8px_0_0_#000] hover:bg-slate-300 active:translate-y-[2px] md:active:translate-y-[4px] active:shadow-none transition-all flex flex-col items-center justify-center gap-1 md:gap-2"
+        >
+          <span class="w-[50%] h-[3px] md:h-1.5 bg-black"></span>
+          <span class="w-[50%] h-[3px] md:h-1.5 bg-black"></span>
+          <span class="w-[50%] h-[3px] md:h-1.5 bg-black"></span>
+        </button>
+      </header>
 
-        <div class="flex-1 grid grid-cols-12 gap-4 min-h-0 overflow-hidden">
-          <div class="col-span-8 flex min-h-0 flex-col justify-between overflow-hidden p-6 bg-white border-4 border-black shadow-[6px_6px_0_0_#000]">
-            <div class="flex items-center justify-between gap-4 mb-4">
-              <div id="progress-indicator" class="font-pixel text-2xl text-indigo-500">
-                Question 1 of 10
-              </div>
-              <div id="score-indicator" class="font-pixel text-2xl text-emerald-600">
-                Score: 0
-              </div>
+      <div class="flex-1 flex flex-col xl:flex-row gap-4 md:gap-6 min-h-0 w-full">
+        
+        <div class="flex-1 xl:flex-[3] bg-white border-4 md:border-[6px] border-black shadow-[4px_4px_0_0_#000] md:shadow-[8px_8px_0_0_#000] p-4 md:p-8 flex flex-col min-h-0 gap-4 md:gap-6">
+          
+          <div class="shrink-0 flex flex-col gap-2 md:gap-4">
+            <div class="flex items-center justify-between px-1">
+              <div id="progress-indicator" class="font-pixel font-bold text-lg md:text-3xl text-indigo-600 tracking-wide">Question 1 of 10</div>
+              <div id="score-indicator" class="font-pixel font-bold text-lg md:text-3xl text-emerald-600 tracking-wide">Score: 0</div>
             </div>
+            <div class="flex items-center gap-3 md:gap-6 mt-1 px-1">
+              <span class="font-pixel font-bold text-base md:text-2xl text-slate-800 whitespace-nowrap">Thời gian</span>
+              <div class="flex-1 h-3 md:h-5 bg-slate-200 border-2 md:border-[3px] border-black overflow-hidden relative">
+                <div id="timer-bar" class="h-full bg-indigo-500 transition-[width] duration-1000 ease-linear" style="width: 100%"></div>
+              </div>
+              <div id="timer-text" class="font-pixel text-xl md:text-4xl font-bold text-slate-800 tabular-nums whitespace-nowrap">15s</div>
+            </div>
+          </div>
 
-            <div class="flex items-center justify-between gap-4 mb-3">
-              <span class="font-pixel text-xl text-slate-700">Time Left</span>
-              <div id="timer-text" class="font-pixel text-3xl font-bold text-slate-700 tabular-nums">
-                15s
-              </div>
-            </div>
-            <div class="w-full h-3 bg-slate-200 border-2 border-black overflow-hidden mb-4">
-              <div id="timer-bar" class="h-full bg-indigo-500 transition-[width] duration-1000 ease-linear" style="width: 100%"></div>
-            </div>
-
-            <h1 id="question-text" class="text-4xl font-bold text-slate-800 mb-4 leading-relaxed">
+          <div class="shrink-0 flex items-center justify-start min-h-[4rem] md:min-h-[5rem] overflow-y-auto px-1 md:px-2 py-2">
+            <h1 id="question-text" class="font-pixel text-xl md:text-3xl lg:text-[2.2rem] font-bold text-slate-900 text-left leading-relaxed">
               Loading question...
             </h1>
-
-            <div id="options-container" class="grid grid-cols-2 grid-rows-2 gap-4 flex-1 min-h-0"></div>
           </div>
 
-          <aside
-            id="mascot-status-panel"
-            class="col-span-4 flex flex-col items-center justify-around p-6 bg-slate-800 border-4 border-black shadow-[6px_6px_0_0_#000]"
-          >
-            <div class="flex-1 flex items-center justify-center overflow-hidden">
-              <img
-                id="mascot-image"
-                src="assets/graycat.png"
-                alt="Gray Cat status"
-                class="w-full max-w-[320px] h-auto object-contain"
-              />
-            </div>
-            <div
-              id="mascot-speech"
-              class="w-[94%] max-w-full bg-white border-4 border-black shadow-[4px_4px_0_0_#000] p-8 text-3xl text-left leading-[42px] text-slate-800"
-            >
-              Ready to race home!
-            </div>
-          </aside>
+          <div id="options-container" class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-6 min-h-0 pb-1"></div>
         </div>
+
+        <aside id="mascot-status-panel" class="shrink-0 xl:flex-[1] xl:max-w-[400px] flex flex-row xl:flex-col items-center justify-between bg-slate-800 border-4 md:border-[6px] border-black shadow-[4px_4px_0_0_#000] md:shadow-[8px_8px_0_0_#000] p-4 md:p-6 min-h-0 gap-4">
+          <div class="shrink-0 xl:flex-1 flex items-center justify-center w-24 xl:w-full min-h-0 py-1 xl:py-0">
+            <img id="mascot-image" src="assets/graycat.png" alt="Gray Cat status" class="w-full h-full max-h-[90px] xl:max-h-[250px] object-contain drop-shadow-[2px_2px_0_rgba(0,0,0,0.5)]" />
+          </div>
+          <div class="flex-1 xl:flex-none xl:w-full flex items-center justify-center">
+            <div id="mascot-speech" class="w-full bg-white border-2 md:border-[4px] border-black shadow-[2px_2px_0_0_#000] md:shadow-[4px_4px_0_0_#000] p-3 md:p-5 font-pixel font-bold text-lg xl:text-2xl text-slate-800 text-left xl:text-center leading-relaxed overflow-y-auto">
+              Sẵn sàng về nhà chúc mừng sinh nhật Mèo Cam chưa?
+            </div>
+          </div>
+        </aside>
+
       </div>
     </section>
 
-    <!-- Results Screen -->
-    <section
-      id="completion-screen"
-      class="hidden w-full h-screen overflow-hidden flex flex-col p-6 sm:p-10 box-border"
-    >
-      <div class="w-full max-w-6xl mx-auto flex-1 flex flex-col items-center justify-center gap-4">
-        <div id="result-stats" class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-3xl">
-          <div class="bg-cyan-50 border-4 border-black shadow-[4px_4px_0_0_#000000] p-4 text-center">
-            <div class="text-3xl font-extrabold text-indigo-600" id="result-score">0</div>
-            <div class="text-sm text-slate-500 mt-1">Final Score</div>
+    <section id="completion-screen" class="hidden w-full h-screen overflow-hidden flex flex-col p-4 md:p-8 box-border">
+      <div class="w-full h-full mx-auto flex-1 flex flex-col items-center justify-center gap-6 md:gap-10">
+        
+        <div id="result-stats" class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-8 w-full max-w-4xl font-pixel">
+          <div class="bg-cyan-50 border-4 md:border-[6px] border-black shadow-[4px_4px_0_0_#000] md:shadow-[8px_8px_0_0_#000] p-6 text-center">
+            <div class="text-5xl font-extrabold text-indigo-600" id="result-score">0</div>
+            <div class="text-2xl font-bold text-slate-700 mt-2">Tổng điểm</div>
           </div>
-          <div class="bg-lime-50 border-4 border-black shadow-[4px_4px_0_0_#000000] p-4 text-center">
-            <div class="text-3xl font-extrabold text-emerald-600" id="result-accuracy">0%</div>
-            <div class="text-sm text-slate-500 mt-1">Accuracy</div>
+          <div class="bg-lime-50 border-4 md:border-[6px] border-black shadow-[4px_4px_0_0_#000] md:shadow-[8px_8px_0_0_#000] p-6 text-center">
+            <div class="text-5xl font-extrabold text-emerald-600" id="result-accuracy">0%</div>
+            <div class="text-2xl font-bold text-slate-700 mt-2">Chính xác</div>
           </div>
-          <div class="bg-amber-50 border-4 border-black shadow-[4px_4px_0_0_#000000] p-4 text-center">
-            <div class="text-3xl font-extrabold text-amber-600" id="result-time">0s</div>
-            <div class="text-sm text-slate-500 mt-1">Time Taken</div>
+          <div class="bg-amber-50 border-4 md:border-[6px] border-black shadow-[4px_4px_0_0_#000] md:shadow-[8px_8px_0_0_#000] p-6 text-center">
+            <div class="text-5xl font-extrabold text-amber-600" id="result-time">0s</div>
+            <div class="text-2xl font-bold text-slate-700 mt-2">Thời gian</div>
           </div>
         </div>
 
         <div id="ending-content" class="w-full flex-1 flex items-center justify-center"></div>
-        <div id="ending-dialogue-container" class="hidden w-full max-w-4xl overflow-hidden flex flex-col gap-2"></div>
+        <div id="ending-dialogue-container" class="hidden w-full max-w-4xl overflow-hidden flex flex-col gap-4"></div>
 
-        <div class="flex flex-wrap items-center justify-center gap-5">
-          <button
-            id="ending-next-btn"
-            type="button"
-            class="hidden font-pixel px-10 py-5 text-2xl bg-pink-500 text-white border-4 border-black shadow-[6px_6px_0_0_#000000]
-                   hover:bg-pink-400 active:translate-x-[3px] active:translate-y-[3px]
-                   active:shadow-[3px_3px_0_0_#000000] transition-all duration-100"
-          >
-            Next
+        <div class="flex flex-wrap items-center justify-center gap-5 mt-4">
+          <button id="ending-next-btn" type="button" class="hidden font-pixel font-bold px-8 md:px-12 py-4 md:py-5 text-2xl md:text-4xl bg-pink-500 text-white border-4 md:border-[6px] border-black shadow-[4px_4px_0_0_#000] md:shadow-[8px_8px_0_0_#000] hover:bg-pink-400 active:translate-y-[4px] active:shadow-none transition-all duration-100">
+            Tiếp tục
           </button>
-          <button
-            id="play-again-btn"
-            type="button"
-            class="font-pixel px-8 py-4 text-xs bg-lime-400 text-black border-4 border-black shadow-[6px_6px_0_0_#000000]
-                   hover:bg-lime-300 active:translate-x-[3px] active:translate-y-[3px]
-                   active:shadow-[3px_3px_0_0_#000000] transition-all duration-100"
-          >
-            Play Again
+          <button id="play-again-btn" type="button" class="font-pixel font-bold px-6 py-3 md:px-10 md:py-4 text-xl md:text-3xl bg-lime-400 text-black border-4 md:border-[6px] border-black shadow-[4px_4px_0_0_#000] md:shadow-[8px_8px_0_0_#000] hover:bg-lime-300 active:translate-y-[4px] active:shadow-none transition-all duration-100">
+            Chơi Lại
           </button>
-          <button
-            id="home-btn"
-            type="button"
-            class="hidden font-pixel px-8 py-4 text-xs bg-sky-300 text-black border-4 border-black shadow-[6px_6px_0_0_#000000]
-                   hover:bg-sky-200 active:translate-x-[3px] active:translate-y-[3px]
-                   active:shadow-[3px_3px_0_0_#000000] transition-all duration-100"
-          >
-            Home
+          <button id="home-btn" type="button" class="hidden font-pixel font-bold px-6 py-3 md:px-10 md:py-4 text-xl md:text-3xl bg-sky-300 text-black border-4 md:border-[6px] border-black shadow-[4px_4px_0_0_#000] md:shadow-[8px_8px_0_0_#000] hover:bg-sky-200 active:translate-y-[4px] active:shadow-none transition-all duration-100">
+            Trang Chủ
           </button>
         </div>
+
       </div>
     </section>
   </main>

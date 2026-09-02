@@ -1,5 +1,5 @@
 // js/app.js
-// Core quiz flow + Timer + Scoring + Results Screen với văn phong hội thoại chuẩn xác.
+// Core logic trò chơi - Đã fix độc lập khung chat Intro không bị ảnh hưởng bởi màn hình Quiz.
 
 (function () {
   "use strict";
@@ -24,8 +24,8 @@
   const homeScreenEl = document.getElementById("home-screen");
   const homeStartBtn = document.getElementById("home-start-btn");
   
-  // Settings Modal elements
-  const menuToggleBtn = document.getElementById("menu-toggle-btn");
+  const menuToggleBtnFloating = document.getElementById("menu-toggle-btn-floating"); 
+  const menuToggleBtnQuiz = document.getElementById("menu-toggle-btn-quiz"); 
   const settingsModal = document.getElementById("settings-modal");
   const closeSettingsBtn = document.getElementById("close-settings-btn");
   const toggleBgmBtn = document.getElementById("toggle-bgm");
@@ -40,17 +40,18 @@
   const mascotImageEl = document.getElementById("mascot-image");
   const mascotSpeechEl = document.getElementById("mascot-speech");
 
+  // Đã fix: Trả lại đúng tỷ lệ co giãn, giới hạn chiều rộng max-w cho riêng Intro
   const BUBBLE_CLASSES =
-    "w-fit max-w-[60vw] bg-slate-300 border-4 border-black shadow-[6px_6px_0_0_#000] p-12 text-[clamp(1.2rem,2.5vw,2.5rem)] text-left leading-loose rounded-none";
+    "w-fit max-w-[95vw] md:max-w-[60vw] lg:max-w-[50vw] bg-white border-4 md:border-[6px] border-black shadow-[4px_4px_0_0_#000] md:shadow-[8px_8px_0_0_#000] p-5 md:p-8 font-pixel font-bold text-xl md:text-3xl lg:text-4xl text-slate-800 text-center md:text-left leading-relaxed md:leading-loose";
 
   let currentIntroStep = 0;
 
   const INTRO_STEPS = [
     {
-      buttonLabel: "Next ➔",
+      buttonLabel: "Tiếp tục ➔",
       html: `
-        <div class="flex flex-row items-center gap-16 w-full">
-          <img src="assets/gingercat.png" alt="Ginger Cat" class="w-80 h-80 object-contain shrink-0" />
+        <div class="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-16 w-full">
+          <img src="assets/gingercat.png" alt="Ginger Cat" class="w-40 h-40 md:w-64 md:h-64 lg:w-80 lg:h-80 object-contain shrink-0 drop-shadow-md" />
           <div class="${BUBBLE_CLASSES}">
             Hôm nay là sinh nhật mình! Không biết có ai nhớ không&nbsp;ta...
           </div>
@@ -58,36 +59,41 @@
       `,
     },
     {
-      buttonLabel: "Next ➔",
+      buttonLabel: "Tiếp tục ➔",
       html: `
-        <div class="flex flex-row items-center gap-16 w-full">
-          <img src="assets/graycat.png" alt="Gray Cat" class="w-80 h-80 object-contain shrink-0" />
+        <div class="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-16 w-full">
+          <img src="assets/graycat.png" alt="Gray Cat" class="w-40 h-40 md:w-64 md:h-64 lg:w-80 lg:h-80 object-contain shrink-0 drop-shadow-md" />
           <div class="${BUBBLE_CLASSES}">
-            Suỵt, mình đang chuẩn bị một bất ngờ thật cho Mèo Cam nè.
+            Suỵt, mình đang chuẩn bị một bất ngờ thật êm đềm cho Mèo Cam nè.
           </div>
         </div>
       `,
     },
     {
-      buttonLabel: "Next ➔",
+      buttonLabel: "Đã rõ ➔",
       html: `
-        <div class="flex flex-row items-center gap-16 w-full">
-          <img src="assets/graycat.png" alt="Gray Cat" class="w-80 h-80 object-contain shrink-0" />
+        <div class="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-16 w-full">
+          <img src="assets/graycat.png" alt="Gray Cat" class="w-40 h-40 md:w-64 md:h-64 lg:w-80 lg:h-80 object-contain shrink-0 hidden md:block drop-shadow-md" />
           <div class="${BUBBLE_CLASSES}">
-            Luật chơi nè: Bạn có 15 giây cho mỗi câu hỏi. Trả lời đúng thì mình sẽ tiến về nhà 1 bước, còn trả lời sai hoặc hết giờ thì Mèo Cam sẽ tiến lại gần hơn. Đạt từ 80% điểm trở lên để mở khóa Happy Ending nhé!
+            Luật chơi nè: Cậu có 15 giây cho mỗi câu hỏi. Trả lời đúng thì mèo xám tiến về nhà 1 bước, còn sai hoặc hết giờ thì Mèo Cam sẽ tiến lại gần. Đạt từ 80% điểm để mở khóa Happy Ending nhé!
           </div>
         </div>
       `,
     },
     {
-      buttonLabel: "Start Game",
+      buttonLabel: "Bắt đầu thôi!",
       html: `
-        <div class="flex flex-row items-center justify-between w-full gap-8 px-12">
-          <img src="assets/graycat.png" alt="Gray Cat" class="w-80 h-80 object-contain shrink-0" />
-          <div class="${BUBBLE_CLASSES}">
-            Mình và Mèo Cam rất mong chờ bữa tiệc này, tụi mình phải thật tập trung để mang chiếc bánh cá hồi yêu thích về kịp lúc mừng sinh nhật Mèo Cam nha!
+        <!-- Đã fix: Tối ưu khoảng cách và size ảnh để nhường chỗ cho text hiển thị chiều ngang -->
+        <div class="flex flex-col md:flex-row items-center justify-center w-full gap-6 md:gap-10 px-2 md:px-8">
+          <div class="flex flex-row gap-4 md:hidden">
+            <img src="assets/graycat.png" alt="Gray Cat" class="w-24 h-24 object-contain shrink-0 drop-shadow-md" />
+            <img src="assets/salmoncake.png" alt="Salmon cake" class="w-24 h-24 object-contain shrink-0 drop-shadow-md" />
           </div>
-          <img src="assets/salmoncake.png" alt="Salmon cake" class="w-80 h-80 object-contain shrink-0" />
+          <img src="assets/graycat.png" alt="Gray Cat" class="hidden md:block w-48 h-48 lg:w-64 lg:h-64 object-contain shrink-0 drop-shadow-md" />
+          <div class="${BUBBLE_CLASSES}">
+            Chuyến này tụi mình phải thật tập trung để mang chiếc bánh cá hồi yêu thích về kịp lúc mừng sinh nhật Mèo Cam nha!
+          </div>
+          <img src="assets/salmoncake.png" alt="Salmon cake" class="hidden md:block w-48 h-48 lg:w-64 lg:h-64 object-contain shrink-0 drop-shadow-md" />
         </div>
       `,
     },
@@ -121,31 +127,39 @@
 
   const OPTION_BASE_CLASSES = [
     "w-full",
-    "text-left",
-    "p-4",
+    "h-full", 
+    "p-3", 
+    "md:p-6",      
     "font-pixel",
-    "text-xl",
-    "leading-relaxed",
+    "font-bold",
+    "text-xl", 
+    "sm:text-2xl",
+    "md:text-3xl",  
+    "lg:text-4xl",
+    "leading-tight",
     "break-words",
     "flex",
     "items-center",
-    "border-4",
+    "justify-center", 
+    "text-center",    
+    "border-[3px]",
+    "md:border-[6px]",
     "border-black",
     "shadow-[4px_4px_0_0_#000]",
+    "md:shadow-[8px_8px_0_0_#000]",
     "bg-white",
     "hover:bg-indigo-50",
-    "active:scale-[0.99]",
-    "transition-colors",
-    "duration-150",
-    "font-medium",
-    "text-slate-800",
+    "active:translate-y-[4px]", 
+    "md:active:translate-y-[8px]", 
+    "active:shadow-none",
+    "transition-all",
+    "duration-100",
+    "text-slate-600", 
     "focus:outline-none",
-    "focus:ring-2",
-    "focus:ring-indigo-400",
   ];
 
-  const OPTION_CORRECT_CLASSES = ["bg-green-500", "text-white", "border-green-500"];
-  const OPTION_INCORRECT_CLASSES = ["bg-red-500", "text-white", "border-red-500"];
+  const OPTION_CORRECT_CLASSES = ["bg-emerald-400", "text-black", "border-emerald-600"];
+  const OPTION_INCORRECT_CLASSES = ["bg-red-400", "text-black", "border-red-600"];
 
   const state = {
     currentIndex: 0,
@@ -223,7 +237,7 @@
     state.graycatProgress = 0;
     state.gingercatProgress = 0;
     graycatRacerEl.style.left = "0%";
-    gingercatRacerEl.style.left = "0%";
+    graycatRacerEl.style.left = "0%";
   }
 
   function updateMascotState(feedbackState) {
@@ -282,11 +296,12 @@
     if (clickedBtn) {
       clickedBtn.classList.remove(
         "bg-white",
-        "border-slate-300",
-        "text-slate-800",
+        "text-slate-600",
         "hover:bg-indigo-50",
-        "hover:border-indigo-400"
+        "shadow-[4px_4px_0_0_#000]",
+        "md:shadow-[8px_8px_0_0_#000]"
       );
+      clickedBtn.classList.add("translate-y-[4px]", "md:translate-y-[8px]", "shadow-none");
       clickedBtn.classList.add(...(isCorrect ? OPTION_CORRECT_CLASSES : OPTION_INCORRECT_CLASSES));
     }
 
@@ -318,14 +333,14 @@
 
   function handleTimeout() {
     if (state.isAdvancing) return;
-    timerTextEl.textContent = "Time's up!";
+    timerTextEl.textContent = "Hết giờ!";
     finishAnswer(null, null, true);
   }
 
   function disableAllOptions() {
     Array.from(optionsEl.children).forEach((btn) => {
       btn.disabled = true;
-      btn.classList.add("opacity-70", "cursor-not-allowed");
+      btn.classList.add("opacity-60", "cursor-not-allowed");
     });
   }
 
@@ -350,12 +365,14 @@
     resultAccuracyEl.textContent = `${accuracy}%`;
     resultTimeEl.textContent = `${elapsedSeconds}s`;
 
+    menuToggleBtnQuiz.classList.add("hidden"); 
+    menuToggleBtnFloating.classList.remove("hidden");
     quizCardEl.classList.add("hidden");
     completionEl.classList.remove("hidden");
 
     endingBranch = accuracy >= 80 ? "happy" : "sad";
     audioMode = "dialogue";
-    audioPlayer.stopBgm(); // Tắt hoàn toàn nhạc nền trong 4 câu hội thoại
+    audioPlayer.stopBgm();
     currentEndingStep = 0;
     currentSadEndingStep = 0;
     renderEndingScreen();
@@ -375,51 +392,49 @@
     }
   }
 
-  // Văn phong hội thoại Happy Ending (tự nhiên, ngọt ngào, đúng góc độ)
   const happyEndingMessages = [
     {
       character: "ginger",
       image: "assets/gingercat_icon.png",
-      text: "Hôm nay đuối quá chừng... Ủa, sao nhà tối thui không một bóng đèn vậy kìa?",
+      text: "Hôm nay đuối quá chừng... Ủa, sao nhà tối thui không một bóng đèn vậy kìa ta?",
     },
     {
       character: "gray",
       image: "assets/graycat_icon.png",
-      text: "Ngạc nhiên chưa! Chúc mừng sinh nhật Mèo Cam nha, bật đèn lên lẹ nào!",
+      text: "Bất ngờ chưa anh bạn nhỏ! Chúc mừng sinh nhật Mèo Cam nha, bật đèn lên lẹ nào!",
     },
     {
       character: "ginger",
       image: "assets/gingercat_icon.png",
-      text: "Hả trời ơi... Mình cứ ngỡ là bận quá nên Mèo Xám quên béng mất rồi chứ. Hạnh phúc xỉu luôn á!",
+      text: "Hả trời ơi... Anh cứ ngỡ bận quá nên quên béng mất rồi chứ bộ. Hạnh phúc xỉu luôn á!",
     },
     {
       character: "gray",
       image: "assets/graycat_icon.png",
-      text: "Quà sinh nhật với bánh cá hồi chuẩn bị sẵn sàng hết rồi nè, qua đây ăn bánh cùng mình mau lên!",
+      text: "Quà sinh nhật với bánh cá hồi chuẩn bị sẵn sàng hết rồi nè, qua đây ăn bánh cùng em mau lên!",
     },
   ];
 
-  // Văn phong hội thoại Sad Ending (tự nhiên, thấu hiểu, ấm áp)
   const sadEndingMessages = [
     {
       character: "ginger",
       image: "assets/gingercat._annoyed.png",
-      text: "Hôm nay đường xá đông đúc mệt lử luôn á...",
+      text: "Hôm nay đường xá đông đúc mệt lử luôn, tủi thân ghê...",
     },
     {
       character: "gray",
       image: "assets/graycat_icon.png",
-      text: "Mèo Cam ơi, mình xin lỗi nha... Loay hoay chuẩn bị bánh trái mà cuối cùng lại về trễ mất tiệc sinh nhật của Mèo Cam rồi...",
+      text: "Mèo Cam ơi anh xin lỗi nha... Loay hoay chuẩn bị bánh trái mà cuối cùng lại về trễ mất tiệc sinh nhật của ông tướng rồi...",
     },
     {
       character: "ginger",
-      image: "assets/gingercat_icon.png",
-      text: "Trời ơi, có nhớ tới nhau là vui lắm rồi, đâu cần phải tự trách thế đâu.",
+      image: "assets/gingercat._annoyed.png",
+      text: "Ngốc ghê, có nhớ tới nhau là vui lắm rồi, đâu cần phải tự trách hoài thế đâu nè.",
     },
     {
       character: "gray",
       image: "assets/graycat_icon.png",
-      text: "Ừm...",
+      text: "Hơi buồn chút xíu vì lỡ mất khoảnh khắc đẹp... Chờ anh bù lại gấp đôi nha thương thương.",
     },
   ];
 
@@ -458,15 +473,15 @@
 
       const message = messages[messageIndex];
       const row = document.createElement("div");
-      row.className = `ending-message-in flex ${message.character === "gray" ? "flex-row-reverse" : "flex-row"} items-center gap-4 w-full`;
+      row.className = `ending-message-in flex ${message.character === "gray" ? "flex-row-reverse" : "flex-row"} items-center gap-4 md:gap-8 w-full`;
       row.innerHTML = `
-        <img src="${message.image}" alt="${message.character === "gray" ? "Gray Cat" : "Ginger Cat"}" class="w-24 h-24 object-contain shrink-0" />
-        <div class="flex-1 min-w-0 bg-white border-4 border-black shadow-[4px_4px_0_0_#000] p-6 text-2xl leading-relaxed text-left text-slate-800">
+        <img src="${message.image}" alt="${message.character === "gray" ? "Gray Cat" : "Ginger Cat"}" class="w-20 h-20 md:w-32 md:h-32 object-contain shrink-0 drop-shadow-md" />
+        <div class="flex-1 min-w-0 bg-white border-4 md:border-[6px] border-black shadow-[4px_4px_0_0_#000] md:shadow-[8px_8px_0_0_#000] p-6 md:p-8 font-pixel font-bold text-xl md:text-3xl leading-relaxed text-left text-slate-800">
           ${message.text}
         </div>
       `;
       endingDialogueContainerEl.appendChild(row);
-      audioPlayer.playMessage(); // Tiếng pop tin nhắn khi hiện từng câu
+      audioPlayer.playMessage();
 
       if (messageIndex === messages.length - 1) {
         endingNextBtn.disabled = false;
@@ -483,7 +498,7 @@
   }
 
   function showSadEnding() {
-    endingNextBtn.textContent = "Next";
+    endingNextBtn.textContent = "Tiếp tục";
 
     if (currentSadEndingStep === 0) {
       renderEndingDialogue(sadEndingMessages);
@@ -497,9 +512,9 @@
     updateResultButtons({ showNext: false, showPlayAgain: true, showHome: true });
     endingContentEl.innerHTML = `
       <div class="ending-message-in flex flex-col items-center gap-6 text-center">
-        <img src="assets/graycat_sadstatus.png" alt="Sad Gray Cat" class="w-80 h-80 max-w-full object-contain" />
-        <div class="bg-white border-4 border-black shadow-[6px_6px_0_0_#000] p-8 text-3xl leading-relaxed text-slate-800">
-          Dù Mèo Cam bảo không sao, nhưng mình vẫn thấy buồn vì lỡ mất khoảnh khắc vui vẻ...
+        <img src="assets/graycat_sadstatus.png" alt="Sad Gray Cat" class="w-48 h-48 md:w-80 md:h-80 max-w-full object-contain drop-shadow-lg" />
+        <div class="bg-white border-4 md:border-[6px] border-black shadow-[4px_4px_0_0_#000] md:shadow-[8px_8px_0_0_#000] p-6 md:p-10 font-pixel font-bold text-2xl md:text-4xl leading-relaxed text-slate-800">
+          Dù Mèo Cam bảo không sao, nhưng lòng vẫn thấy tiếc hùi hụi vì lỡ mất khoảnh khắc vui vẻ...
         </div>
       </div>
     `;
@@ -524,16 +539,16 @@
       endingContentEl.classList.remove("hidden");
       resultStatsEl.classList.remove("hidden");
       updateResultButtons({ showNext: true, showPlayAgain: false, showHome: false });
-      endingNextBtn.textContent = "Next";
+      endingNextBtn.textContent = "Tiếp tục";
       document.body.classList.remove("is-loading");
       endingContentEl.innerHTML = `
-        <div class="ending-message-in flex flex-col items-center gap-6 text-center">
-          <div class="flex items-center justify-center gap-8">
-            <img src="assets/gingercat_happy.png" alt="Happy Ginger Cat" class="w-48 h-48 object-contain" />
-            <img src="assets/graycat_happystatus.png" alt="Happy Gray Cat" class="w-48 h-48 object-contain" />
+        <div class="ending-message-in flex flex-col items-center gap-5 md:gap-8 text-center">
+          <div class="flex items-center justify-center gap-6 md:gap-10">
+            <img src="assets/gingercat_happy.png" alt="Happy Ginger Cat" class="w-32 h-32 md:w-56 md:h-56 object-contain drop-shadow-md" />
+            <img src="assets/graycat_happystatus.png" alt="Happy Gray Cat" class="w-32 h-32 md:w-56 md:h-56 object-contain drop-shadow-md" />
           </div>
-          <div class="bg-white border-4 border-black shadow-[6px_6px_0_0_#000] p-8 text-3xl leading-relaxed text-slate-800">
-            Cảm ơn bạn vì đã luôn đồng hành và mang đến thật nhiều tiếng cười nhé!
+          <div class="bg-white border-4 md:border-[6px] border-black shadow-[4px_4px_0_0_#000] md:shadow-[8px_8px_0_0_#000] p-6 md:p-10 font-pixel font-bold text-2xl md:text-4xl leading-relaxed text-slate-800">
+            Cảm ơn cậu vì đã luôn đồng hành và mang đến thật nhiều tiếng cười nhé!
           </div>
         </div>
       `;
@@ -545,9 +560,9 @@
       resultStatsEl.classList.remove("hidden");
       updateResultButtons({ showNext: false, showPlayAgain: true, showHome: true });
       endingContentEl.innerHTML = `
-        <div class="ending-message-in flex flex-col items-center gap-6 text-center">
-          <img src="assets/together.png" alt="Ginger Cat and Gray Cat celebrating together" class="w-full max-w-5xl max-h-[65vh] object-contain" />
-          <div class="font-pixel text-3xl text-pink-600">Happy Birthday Mèo Cam!</div>
+        <div class="ending-message-in flex flex-col items-center gap-8 md:gap-12 text-center">
+          <img src="assets/together.png" alt="Ginger Cat and Gray Cat celebrating together" class="w-full max-w-5xl max-h-[40vh] md:max-h-[65vh] object-contain drop-shadow-lg" />
+          <div class="font-pixel font-bold text-4xl md:text-7xl text-pink-600 drop-shadow-sm">Happy Birthday Mèo Cam!</div>
         </div>
       `;
       document.body.classList.remove("is-loading");
@@ -594,6 +609,7 @@
     homeScreenEl.classList.toggle("hidden", !returnToHome);
     introScreenEl.classList.toggle("hidden", returnToHome);
     quizCardEl.classList.add("hidden");
+    menuToggleBtnFloating.classList.toggle("hidden", false);
     renderIntroStep();
     audioPlayer.startBgm(returnToHome ? "home" : "intro");
   }
@@ -602,6 +618,7 @@
     homeScreenEl.classList.add("hidden");
     introScreenEl.classList.add("hidden");
     quizCardEl.classList.remove("hidden");
+    menuToggleBtnFloating.classList.add("hidden"); 
 
     audioMode = "quiz";
     audioPlayer.startBgm("quiz");
@@ -634,28 +651,25 @@
     introPreviousBtn.addEventListener("click", handleIntroPreviousClick);
     introNextBtn.addEventListener("click", handleIntroNextClick);
 
-    menuToggleBtn.addEventListener("click", () => {
-      settingsModal.classList.remove("hidden");
-    });
-
-    closeSettingsBtn.addEventListener("click", () => {
-      settingsModal.classList.add("hidden");
-    });
+    menuToggleBtnFloating.addEventListener("click", () => settingsModal.classList.remove("hidden"));
+    menuToggleBtnQuiz.addEventListener("click", () => settingsModal.classList.remove("hidden"));
+    
+    closeSettingsBtn.addEventListener("click", () => settingsModal.classList.add("hidden"));
 
     toggleBgmBtn.addEventListener("click", () => {
       const enabled = audioPlayer.toggleBgm();
       toggleBgmBtn.textContent = enabled ? "ON" : "OFF";
-      toggleBgmBtn.className = `font-pixel px-4 py-2 text-xs border-2 border-black shadow-[2px_2px_0_0_#000] ${enabled ? "bg-emerald-400 text-black" : "bg-slate-300 text-slate-600"}`;
+      toggleBgmBtn.className = `px-4 py-2 text-xl font-bold border-[3px] border-black shadow-[2px_2px_0_0_#000] ${enabled ? "bg-emerald-400 text-black" : "bg-slate-300 text-slate-600"}`;
     });
 
     toggleSfxBtn.addEventListener("click", () => {
       const enabled = audioPlayer.toggleSfx();
       toggleSfxBtn.textContent = enabled ? "ON" : "OFF";
-      toggleSfxBtn.className = `font-pixel px-4 py-2 text-xs border-2 border-black shadow-[2px_2px_0_0_#000] ${enabled ? "bg-emerald-400 text-black" : "bg-slate-300 text-slate-600"}`;
+      toggleSfxBtn.className = `px-4 py-2 text-xl font-bold border-[3px] border-black shadow-[2px_2px_0_0_#000] ${enabled ? "bg-emerald-400 text-black" : "bg-slate-300 text-slate-600"}`;
     });
 
     document.addEventListener("click", (event) => {
-      if (event.target.closest("button") && event.target !== menuToggleBtn && !settingsModal.contains(event.target)) {
+      if (event.target.closest("button") && event.target !== menuToggleBtnFloating && event.target !== menuToggleBtnQuiz && !settingsModal.contains(event.target)) {
         audioPlayer.playClick();
       }
     });
