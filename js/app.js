@@ -1,13 +1,9 @@
 // js/app.js
-// Core quiz flow + Timer + Scoring + Results Screen.
-//
-// NOTE: Gamification features (streak bonus, leaderboard, difficulty,
-// animations, sound) are intentionally NOT implemented yet.
+// Core quiz flow + Timer + Scoring + Results Screen với văn phong hội thoại chuẩn xác.
 
 (function () {
   "use strict";
 
-  // ---- DOM references — the ONE status bar's elements live here ----------
   const questionEl = document.getElementById("question-text");
   const optionsEl = document.getElementById("options-container");
   const progressEl = document.getElementById("progress-indicator");
@@ -27,7 +23,14 @@
   const homeBtn = document.getElementById("home-btn");
   const homeScreenEl = document.getElementById("home-screen");
   const homeStartBtn = document.getElementById("home-start-btn");
-  const muteToggleBtn = document.getElementById("mute-toggle");
+  
+  // Settings Modal elements
+  const menuToggleBtn = document.getElementById("menu-toggle-btn");
+  const settingsModal = document.getElementById("settings-modal");
+  const closeSettingsBtn = document.getElementById("close-settings-btn");
+  const toggleBgmBtn = document.getElementById("toggle-bgm");
+  const toggleSfxBtn = document.getElementById("toggle-sfx");
+
   const introScreenEl = document.getElementById("intro-screen");
   const introStepContentEl = document.getElementById("intro-step-content");
   const introPreviousBtn = document.getElementById("intro-previous-btn");
@@ -37,7 +40,6 @@
   const mascotImageEl = document.getElementById("mascot-image");
   const mascotSpeechEl = document.getElementById("mascot-speech");
 
-  // ---- Intro Screen: Visual Novel Cutscene State Machine -----------------
   const BUBBLE_CLASSES =
     "w-fit max-w-[60vw] bg-slate-300 border-4 border-black shadow-[6px_6px_0_0_#000] p-12 text-[clamp(1.2rem,2.5vw,2.5rem)] text-left leading-loose rounded-none";
 
@@ -61,7 +63,7 @@
         <div class="flex flex-row items-center gap-16 w-full">
           <img src="assets/graycat.png" alt="Gray Cat" class="w-80 h-80 object-contain shrink-0" />
           <div class="${BUBBLE_CLASSES}">
-            Suỵt, mình đang tạo bất ngờ cho Mèo Cam.
+            Suỵt, mình đang chuẩn bị một bất ngờ thật cho Mèo Cam nè.
           </div>
         </div>
       `,
@@ -72,7 +74,7 @@
         <div class="flex flex-row items-center gap-16 w-full">
           <img src="assets/graycat.png" alt="Gray Cat" class="w-80 h-80 object-contain shrink-0" />
           <div class="${BUBBLE_CLASSES}">
-            Game Rules: You have 15 seconds for each question. A correct answer moves Gray Cat one house forward toward home. An incorrect answer or timeout lets Ginger Cat move closer. Score 80% or higher to unlock the Happy Ending; below 80% leads to the Sad Ending.
+            Luật chơi nè: Bạn có 15 giây cho mỗi câu hỏi. Trả lời đúng thì mình sẽ tiến về nhà 1 bước, còn trả lời sai hoặc hết giờ thì Mèo Cam sẽ tiến lại gần hơn. Đạt từ 80% điểm trở lên để mở khóa Happy Ending nhé!
           </div>
         </div>
       `,
@@ -83,7 +85,7 @@
         <div class="flex flex-row items-center justify-between w-full gap-8 px-12">
           <img src="assets/graycat.png" alt="Gray Cat" class="w-80 h-80 object-contain shrink-0" />
           <div class="${BUBBLE_CLASSES}">
-            Mình và Mèo Cam rất mong chờ đến buổi tiệc sinh nhật này. Hãy cùng trả lời đúng các câu hỏi để giúp mình mang chiếc bánh cá hồi mà Mèo Cam yêu thích về nhà trước khi Mèo Cam phát hiện nhé!
+            Mình và Mèo Cam rất mong chờ bữa tiệc này, tụi mình phải thật tập trung để mang chiếc bánh cá hồi yêu thích về kịp lúc mừng sinh nhật Mèo Cam nha!
           </div>
           <img src="assets/salmoncake.png" alt="Salmon cake" class="w-80 h-80 object-contain shrink-0" />
         </div>
@@ -114,13 +116,9 @@
     }
   }
 
-  // ---- Config ---------------------------------------------------------------
   const TIME_LIMIT_SECONDS = 15;
   const TOTAL_QUESTIONS = questions.length;
 
-  // Base classes applied to every freshly-rendered answer button. Kept as an
-  // array so we can reliably remove exactly these classes later without
-  // guessing at what's on the element.
   const OPTION_BASE_CLASSES = [
     "w-full",
     "text-left",
@@ -149,18 +147,16 @@
   const OPTION_CORRECT_CLASSES = ["bg-green-500", "text-white", "border-green-500"];
   const OPTION_INCORRECT_CLASSES = ["bg-red-500", "text-white", "border-red-500"];
 
-  // ---- State ---------------------------------------------------------------
   const state = {
     currentIndex: 0,
-    answers: [], // { questionIndex, selected, correct, timedOut }
+    answers: [],
     score: 0,
     graycatProgress: 0,
     gingercatProgress: 0,
-    isAdvancing: false, // guards against double-click/double-advance/double-timeout
-    startTime: null, // Date.now() when the quiz (re)starts
+    isAdvancing: false,
+    startTime: null,
   };
 
-  // Timer-specific state, kept separate so it's obvious what startTimer/clearTimer touch.
   const timerState = {
     intervalId: null,
     timeLeft: TIME_LIMIT_SECONDS,
@@ -172,12 +168,8 @@
   let endingRevealTimeoutId = null;
   let confettiIntervalId = null;
   let endingDialogueToken = 0;
-  let audioMode = "idle";
+  let audioMode = "home";
 
-  // ---- Timer -----------------------------------------------------------
-  // CRITICAL: always clear any existing interval before starting a new one.
-  // Without this, re-rendering a question (or a race between click + tick)
-  // can leave two intervals running, which halves the visible countdown time.
   function clearTimer() {
     if (timerState.intervalId !== null) {
       window.clearInterval(timerState.intervalId);
@@ -201,7 +193,6 @@
 
   function startTimer() {
     clearTimer();
-
     timerState.timeLeft = TIME_LIMIT_SECONDS;
     updateTimerUI();
 
@@ -216,7 +207,6 @@
     }, 1000);
   }
 
-  // ---- Scoring -----------------------------------------------------------
   function updateScoreUI() {
     scoreEl.textContent = `Score: ${state.score}`;
   }
@@ -242,21 +232,20 @@
     if (feedbackState === "correct") {
       mascotImageEl.src = "assets/graycat_happystatus.png";
       mascotImageEl.alt = "Gray Cat celebrating";
-      mascotSpeechEl.textContent = "Great! Let's move forward!";
+      mascotSpeechEl.textContent = "Tuyệt lắm! Tiến gần về nhà rồi nè!";
       mascotImageEl.classList.add("bounce");
     } else if (feedbackState === "incorrect") {
       mascotImageEl.src = "assets/graycat_sadstatus.png";
       mascotImageEl.alt = "Gray Cat disappointed";
-      mascotSpeechEl.textContent = "Oh no! Ginger Cat is getting closer to home!";
+      mascotSpeechEl.textContent = "Hichic, Mèo Cam sắp về tới nhà mất rồi...";
       mascotImageEl.classList.add("shake");
     } else {
       mascotImageEl.src = "assets/graycat.png";
       mascotImageEl.alt = "Gray Cat status";
-      mascotSpeechEl.textContent = "Ready to race home!";
+      mascotSpeechEl.textContent = "Sẵn sàng về nhà chúc mừng sinh nhật Mèo Cam chưa?";
     }
   }
 
-  // ---- Rendering -------------------------------------------------------
   function renderQuestion() {
     const q = questions[state.currentIndex];
 
@@ -287,7 +276,6 @@
     const q = questions[state.currentIndex];
     const isCorrect = !timedOut && selectedOption === q.correctAnswer;
 
-    // Disable controls and stop the active countdown immediately.
     disableAllOptions();
     clearTimer();
 
@@ -302,7 +290,6 @@
       clickedBtn.classList.add(...(isCorrect ? OPTION_CORRECT_CLASSES : OPTION_INCORRECT_CLASSES));
     }
 
-    // Update score first, then the map, then mascot feedback.
     state.score += isCorrect ? 1 : 0;
     updateScoreUI();
 
@@ -354,7 +341,6 @@
     }
   }
 
-  // ---- Results Screen -----------------------------------------------------
   function showResultsScreen() {
     const elapsedMs = Date.now() - state.startTime;
     const elapsedSeconds = Math.round(elapsedMs / 1000);
@@ -369,6 +355,7 @@
 
     endingBranch = accuracy >= 80 ? "happy" : "sad";
     audioMode = "dialogue";
+    audioPlayer.stopBgm(); // Tắt hoàn toàn nhạc nền trong 4 câu hội thoại
     currentEndingStep = 0;
     currentSadEndingStep = 0;
     renderEndingScreen();
@@ -388,49 +375,51 @@
     }
   }
 
+  // Văn phong hội thoại Happy Ending (tự nhiên, ngọt ngào, đúng góc độ)
   const happyEndingMessages = [
     {
       character: "ginger",
       image: "assets/gingercat_icon.png",
-      text: "I'm finally home... Huh? Why is the house completely dark?",
+      text: "Hôm nay đuối quá chừng... Ủa, sao nhà tối thui không một bóng đèn vậy kìa?",
     },
     {
       character: "gray",
       image: "assets/graycat_icon.png",
-      text: "Surprise!!! Happy birthday, Ginger Cat! Hurry up and turn on the lights!",
+      text: "Ngạc nhiên chưa! Chúc mừng sinh nhật Mèo Cam nha, bật đèn lên lẹ nào!",
     },
     {
       character: "ginger",
       image: "assets/gingercat_icon.png",
-      text: "Oh my gosh, I thought you were too busy and had completely forgotten! Thank you so much!",
+      text: "Hả trời ơi... Mình cứ ngỡ là bận quá nên Mèo Xám quên béng mất rồi chứ. Hạnh phúc xỉu luôn á!",
     },
     {
       character: "gray",
       image: "assets/graycat_icon.png",
-      text: "How could I ever forget? I prepared a gigantic birthday cake for you. Come on, let's eat!",
+      text: "Quà sinh nhật với bánh cá hồi chuẩn bị sẵn sàng hết rồi nè, qua đây ăn bánh cùng mình mau lên!",
     },
   ];
 
+  // Văn phong hội thoại Sad Ending (tự nhiên, thấu hiểu, ấm áp)
   const sadEndingMessages = [
     {
       character: "ginger",
       image: "assets/gingercat._annoyed.png",
-      text: "The traffic was so bad today... I'm exhausted...",
+      text: "Hôm nay đường xá đông đúc mệt lử luôn á...",
     },
     {
       character: "gray",
       image: "assets/graycat_icon.png",
-      text: "Ginger Cat... I'm sorry. I ran out to buy a birthday cake, but I didn't make it back in time to celebrate your birthday...",
+      text: "Mèo Cam ơi, mình xin lỗi nha... Loay hoay chuẩn bị bánh trái mà cuối cùng lại về trễ mất tiệc sinh nhật của Mèo Cam rồi...",
     },
     {
       character: "ginger",
       image: "assets/gingercat_icon.png",
-      text: "It's okay, silly. The fact that you remembered my birthday already makes me happy. That's all I need.",
+      text: "Trời ơi, có nhớ tới nhau là vui lắm rồi, đâu cần phải tự trách thế đâu.",
     },
     {
       character: "gray",
       image: "assets/graycat_icon.png",
-      text: "Hmm...",
+      text: "Ừm...",
     },
   ];
 
@@ -477,7 +466,7 @@
         </div>
       `;
       endingDialogueContainerEl.appendChild(row);
-      audioPlayer.playMessage();
+      audioPlayer.playMessage(); // Tiếng pop tin nhắn khi hiện từng câu
 
       if (messageIndex === messages.length - 1) {
         endingNextBtn.disabled = false;
@@ -510,7 +499,7 @@
       <div class="ending-message-in flex flex-col items-center gap-6 text-center">
         <img src="assets/graycat_sadstatus.png" alt="Sad Gray Cat" class="w-80 h-80 max-w-full object-contain" />
         <div class="bg-white border-4 border-black shadow-[6px_6px_0_0_#000] p-8 text-3xl leading-relaxed text-slate-800">
-          Even though Ginger Cat says it's okay, I still feel really sad...
+          Dù Mèo Cam bảo không sao, nhưng mình vẫn thấy buồn vì lỡ mất khoảnh khắc vui vẻ...
         </div>
       </div>
     `;
@@ -544,7 +533,7 @@
             <img src="assets/graycat_happystatus.png" alt="Happy Gray Cat" class="w-48 h-48 object-contain" />
           </div>
           <div class="bg-white border-4 border-black shadow-[6px_6px_0_0_#000] p-8 text-3xl leading-relaxed text-slate-800">
-            Thank you for helping us! You made this birthday surprise extra special!
+            Cảm ơn bạn vì đã luôn đồng hành và mang đến thật nhiều tiếng cười nhé!
           </div>
         </div>
       `;
@@ -558,7 +547,7 @@
       endingContentEl.innerHTML = `
         <div class="ending-message-in flex flex-col items-center gap-6 text-center">
           <img src="assets/together.png" alt="Ginger Cat and Gray Cat celebrating together" class="w-full max-w-5xl max-h-[65vh] object-contain" />
-          <div class="font-pixel text-3xl text-pink-600">Happy Birthday!</div>
+          <div class="font-pixel text-3xl text-pink-600">Happy Birthday Mèo Cam!</div>
         </div>
       `;
       document.body.classList.remove("is-loading");
@@ -581,7 +570,6 @@
     }
   }
 
-  // ---- Reset / Play Again --------------------------------------------------
   function resetQuiz(returnToHome = false) {
     clearTimer();
     clearEndingEffects();
@@ -607,7 +595,7 @@
     introScreenEl.classList.toggle("hidden", returnToHome);
     quizCardEl.classList.add("hidden");
     renderIntroStep();
-    audioPlayer.startBgm();
+    audioPlayer.startBgm(returnToHome ? "home" : "intro");
   }
 
   function startQuiz() {
@@ -616,7 +604,7 @@
     quizCardEl.classList.remove("hidden");
 
     audioMode = "quiz";
-    audioPlayer.startBgm();
+    audioPlayer.startBgm("quiz");
     state.startTime = Date.now();
     renderQuestion();
   }
@@ -630,10 +618,9 @@
     currentIntroStep = 0;
     renderIntroStep();
     audioMode = "intro";
-    audioPlayer.startBgm();
+    audioPlayer.startBgm("intro");
   }
 
-  // ---- Init ---------------------------------------------------------------
   function init() {
     if (!Array.isArray(questions) || questions.length !== 10) {
       questionEl.textContent = "Error: questions dataset must contain exactly 10 questions.";
@@ -646,26 +633,37 @@
     endingNextBtn.addEventListener("click", handleEndingNextClick);
     introPreviousBtn.addEventListener("click", handleIntroPreviousClick);
     introNextBtn.addEventListener("click", handleIntroNextClick);
-    document.addEventListener("click", (event) => {
-      if (event.target.closest("button") && event.target !== muteToggleBtn) {
-        audioPlayer.playClick();
-      }
+
+    menuToggleBtn.addEventListener("click", () => {
+      settingsModal.classList.remove("hidden");
     });
-    muteToggleBtn.addEventListener("click", () => {
-      const muted = audioPlayer.toggleMute();
-      muteToggleBtn.textContent = muted ? "Sound Off" : "Sound On";
-      muteToggleBtn.setAttribute("aria-label", muted ? "Unmute sound" : "Mute sound");
-      if (!muted) {
-        if (audioMode === "home" || audioMode === "intro") audioPlayer.startBgm();
-        if (audioMode === "quiz") audioPlayer.startBgm();
-        if (audioMode === "happy" || audioMode === "sad") audioPlayer.playEndingMusic(audioMode);
+
+    closeSettingsBtn.addEventListener("click", () => {
+      settingsModal.classList.add("hidden");
+    });
+
+    toggleBgmBtn.addEventListener("click", () => {
+      const enabled = audioPlayer.toggleBgm();
+      toggleBgmBtn.textContent = enabled ? "ON" : "OFF";
+      toggleBgmBtn.className = `font-pixel px-4 py-2 text-xs border-2 border-black shadow-[2px_2px_0_0_#000] ${enabled ? "bg-emerald-400 text-black" : "bg-slate-300 text-slate-600"}`;
+    });
+
+    toggleSfxBtn.addEventListener("click", () => {
+      const enabled = audioPlayer.toggleSfx();
+      toggleSfxBtn.textContent = enabled ? "ON" : "OFF";
+      toggleSfxBtn.className = `font-pixel px-4 py-2 text-xs border-2 border-black shadow-[2px_2px_0_0_#000] ${enabled ? "bg-emerald-400 text-black" : "bg-slate-300 text-slate-600"}`;
+    });
+
+    document.addEventListener("click", (event) => {
+      if (event.target.closest("button") && event.target !== menuToggleBtn && !settingsModal.contains(event.target)) {
+        audioPlayer.playClick();
       }
     });
 
     updateScoreUI();
     renderIntroStep();
     audioMode = "home";
-    audioPlayer.startBgm();
+    audioPlayer.startBgm("home");
   }
 
   document.addEventListener("DOMContentLoaded", init);

@@ -1,17 +1,15 @@
 // js/audio.js
-// Sound effects synthesized purely via the Web Audio API.
-// Per CLAUDE.md: NEVER use external audio files (MP3/WAV/etc).
-//
-// Exposes a single global audio controller. All music and effects are
-// synthesized locally with Web Audio API; no external audio files are used.
+// Daily & Cozy Audio Manager thuần Web Audio API với tính năng tùy chỉnh độc lập BGM và SFX.
 
 const audioPlayer = (function () {
   "use strict";
 
   let ctx = null;
-  let isMuted = false;
+  let isBgmEnabled = true;
+  let isSfxEnabled = true;
   let bgmIntervalId = null;
   let bgmStep = 0;
+  let activeBgmTrack = "home";
 
   function getContext() {
     if (!ctx) {
@@ -24,113 +22,145 @@ const audioPlayer = (function () {
     return ctx;
   }
 
-  function playTone(freq, duration, type, startGain) {
-    if (isMuted) return;
+  function playTone(freq, duration, type = "sine", startGain = 0.03, slideToFreq = null) {
     const audioCtx = getContext();
-    const oscillator = audioCtx.createOscillator();
+    const now = audioCtx.currentTime;
+
+    const osc = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
 
-    oscillator.type = type;
-    oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    if (slideToFreq) {
+      osc.frequency.exponentialRampToValueAtTime(Math.max(20, slideToFreq), now + duration);
+    }
 
-    gainNode.gain.setValueAtTime(startGain, audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(1800, now);
 
-    oscillator.connect(gainNode);
+    gainNode.gain.setValueAtTime(0.0001, now);
+    gainNode.gain.exponentialRampToValueAtTime(startGain, now + 0.015);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    osc.connect(filter);
+    filter.connect(gainNode);
     gainNode.connect(audioCtx.destination);
 
-    oscillator.start(audioCtx.currentTime);
-    oscillator.stop(audioCtx.currentTime + duration);
-  }
-
-  function playCorrect() {
-    try {
-      const audioCtx = getContext();
-      playTone(880, 0.15, "sine", 0.2); // A5
-      window.setTimeout(() => {
-        if (audioCtx.state !== "closed") playTone(1318.5, 0.2, "sine", 0.2); // E6
-      }, 90);
-    } catch (err) {
-      console.warn("audioPlayer: unable to play correct sound", err);
-    }
+    osc.start(now);
+    osc.stop(now + duration);
   }
 
   function playClick() {
+    if (!isSfxEnabled) return;
     try {
-      playTone(740, 0.06, "square", 0.08);
+      playTone(480, 0.05, "sine", 0.04, 320);
     } catch (err) {
-      console.warn("audioPlayer: unable to play click sound", err);
+      console.warn("audioPlayer: click sound error", err);
     }
   }
 
   function playMessage() {
+    if (!isSfxEnabled) return;
     try {
-      playTone(1047, 0.08, "sine", 0.07);
-      window.setTimeout(() => playTone(1568, 0.12, "sine", 0.05), 45);
+      const audioCtx = getContext();
+      playTone(880, 0.08, "sine", 0.035);
+      window.setTimeout(() => {
+        if (audioCtx.state !== "closed") playTone(1320, 0.12, "sine", 0.03);
+      }, 80);
     } catch (err) {
-      console.warn("audioPlayer: unable to play message sound", err);
+      console.warn("audioPlayer: message sound error", err);
+    }
+  }
+
+  function playCorrect() {
+    if (!isSfxEnabled) return;
+    try {
+      const audioCtx = getContext();
+      const notes = [523.25, 659.25, 783.99, 1046.5];
+      notes.forEach((freq, idx) => {
+        window.setTimeout(() => {
+          if (audioCtx.state !== "closed") playTone(freq, 0.22, "sine", 0.03);
+        }, idx * 70);
+      });
+    } catch (err) {
+      console.warn("audioPlayer: correct sound error", err);
     }
   }
 
   function playWrong() {
+    if (!isSfxEnabled) return;
     try {
-      playTone(140, 0.35, "sawtooth", 0.15);
+      const audioCtx = getContext();
+      playTone(293.66, 0.15, "triangle", 0.035, 220);
+      window.setTimeout(() => {
+        if (audioCtx.state !== "closed") playTone(220, 0.2, "triangle", 0.03, 164.81);
+      }, 100);
     } catch (err) {
-      console.warn("audioPlayer: unable to play wrong sound", err);
+      console.warn("audioPlayer: wrong sound error", err);
     }
   }
 
+  // Phân chia Nhạc nền (BGM) riêng biệt với phong cách daily nhẹ nhàng
   const BGM_TRACKS = {
-    home: { melody: [262, 330, 392, 523, 659, 523, 392, 330], interval: 300 },
-    intro: { melody: [392, 440, 523, 659, 523, 440, 392, 330], interval: 340 },
-    quiz: { melody: [330, 392, 494, 659, 494, 392, 330, 247], interval: 220 },
+    home: {
+      melody: [392.0, 440.0, 523.25, 659.25, 523.25, 440.0, 392.0, 329.63],
+      interval: 380, // Track 1: Home Screen (Êm dịu chủ đạo)
+    },
+    intro: {
+      melody: [523.25, 587.33, 659.25, 783.99, 659.25, 587.33, 523.25, 392.0],
+      interval: 450, // Track 2: Intro / Rule Screen (Daily nhẹ nhàng, chậm rãi)
+    },
+    quiz: {
+      melody: [523.25, 587.33, 659.25, 783.99, 659.25, 587.33, 523.25, 440.0],
+      interval: 240, // Track 3: Quiz Screen (Tập trung, nhịp độ vừa phải)
+    },
   };
 
-  let activeBgmTrack = "home";
-
   function playBgmNote() {
+    if (!isBgmEnabled) return;
     const track = BGM_TRACKS[activeBgmTrack] || BGM_TRACKS.home;
     const melody = track.melody;
-    playTone(melody[bgmStep % melody.length], 0.24, "square", 0.035);
+    playTone(melody[bgmStep % melody.length], 0.25, "sine", 0.02);
     bgmStep += 1;
   }
 
   function startBgm(trackName = "home") {
-    if (isMuted) return;
+    stopBgm();
+    activeBgmTrack = BGM_TRACKS[trackName] ? trackName : "home";
+    bgmStep = 0;
+    if (!isBgmEnabled) return;
 
     try {
       getContext();
-      stopBgm();
-      activeBgmTrack = BGM_TRACKS[trackName] ? trackName : "home";
-      bgmStep = 0;
       playBgmNote();
-      bgmIntervalId = window.setInterval(
-        playBgmNote,
-        BGM_TRACKS[activeBgmTrack].interval
-      );
+      bgmIntervalId = window.setInterval(playBgmNote, BGM_TRACKS[activeBgmTrack].interval);
     } catch (err) {
-      console.warn("audioPlayer: unable to start background music", err);
+      console.warn("audioPlayer: startBgm error", err);
     }
   }
 
   function playEndingMusic(branch) {
-    if (isMuted) return;
+    stopBgm();
+    if (!isBgmEnabled) return;
 
     try {
       getContext();
-      stopBgm();
       const melody = branch === "happy"
-        ? [523, 659, 784, 1047, 784, 659]
-        : [330, 294, 262, 220, 262, 294];
+        ? [523.25, 659.25, 783.99, 880.0, 783.99, 659.25, 523.25]
+        : [349.23, 329.63, 293.66, 261.63, 220.0, 261.63, 293.66];
+
       let step = 0;
       const playEndingNote = () => {
-        playTone(melody[step % melody.length], 0.45, branch === "happy" ? "square" : "triangle", 0.045);
+        if (!isBgmEnabled) return;
+        playTone(melody[step % melody.length], 0.45, "sine", 0.025);
         step += 1;
       };
+
       playEndingNote();
-      bgmIntervalId = window.setInterval(playEndingNote, 600);
+      bgmIntervalId = window.setInterval(playEndingNote, branch === "happy" ? 420 : 560);
     } catch (err) {
-      console.warn("audioPlayer: unable to start ending music", err);
+      console.warn("audioPlayer: ending music error", err);
     }
   }
 
@@ -145,14 +175,19 @@ const audioPlayer = (function () {
     stopBgm();
   }
 
-  function setMuted(nextMuted) {
-    isMuted = nextMuted;
-    if (isMuted) stopBgm();
+  function toggleBgm() {
+    isBgmEnabled = !isBgmEnabled;
+    if (!isBgmEnabled) {
+      stopBgm();
+    } else {
+      startBgm(activeBgmTrack);
+    }
+    return isBgmEnabled;
   }
 
-  function toggleMute() {
-    setMuted(!isMuted);
-    return isMuted;
+  function toggleSfx() {
+    isSfxEnabled = !isSfxEnabled;
+    return isSfxEnabled;
   }
 
   return {
@@ -164,7 +199,9 @@ const audioPlayer = (function () {
     playEndingMusic,
     stopBgm,
     stopAll,
-    toggleMute,
-    isMuted: () => isMuted,
+    toggleBgm,
+    toggleSfx,
+    isBgmEnabled: () => isBgmEnabled,
+    isSfxEnabled: () => isSfxEnabled,
   };
 })();
