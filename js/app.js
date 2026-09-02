@@ -418,17 +418,17 @@
   const sadEndingMessages = [
     {
       character: "ginger",
-      image: "assets/gingercat._annoyed.png",
+      image: "assets/gingercat_annoyed.png",
       text: "Hôm nay đường xá đông đúc mệt lử luôn, tủi thân ghê...",
     },
     {
       character: "gray",
-      image: "assets/graycat_icon.png",
+      image: "assets/graycat_iconsad.png",
       text: "Mèo Cam ơi anh xin lỗi nha... Loay hoay chuẩn bị bánh trái mà cuối cùng lại về trễ mất tiệc sinh nhật của ông tướng rồi...",
     },
     {
       character: "ginger",
-      image: "assets/gingercat._annoyed.png",
+      image: "assets/gingercat_icon.png",
       text: "Ngốc ghê, có nhớ tới nhau là vui lắm rồi, đâu cần phải tự trách hoài thế đâu nè.",
     },
     {
