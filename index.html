@@ -17,9 +17,13 @@
   />
 
   <style>
+    :root {
+      --pixel-scale: clamp(0.9rem, 2.2vh, 1.35rem);
+    }
+
     body {
       font-family: "VT323", monospace;
-      font-size: 1.25rem;
+      font-size: var(--pixel-scale);
       background-color: #bfdbfe;
       background-image:
         linear-gradient(rgba(255, 255, 255, 0.4) 1px, transparent 1px),
@@ -61,152 +65,155 @@
 
     #menu-toggle-btn {
       position: fixed;
-      top: 1.5rem;
-      right: 1.5rem;
+      top: clamp(0.5rem, 1.8vh, 1.25rem);
+      right: clamp(0.5rem, 1.8vh, 1.25rem);
       z-index: 50;
-    }
-
-    @media (max-width: 1279px) {
-      #intro-screen, #home-screen {
-        padding: 1.25rem;
-      }
-      #menu-toggle-btn {
-        top: 1rem;
-        right: 1rem;
-      }
     }
   </style>
 </head>
-<body class="bg-sky-200 h-screen w-full overflow-hidden">
+<body class="bg-sky-200 h-screen w-full overflow-hidden select-none">
 
   <!-- Nút Menu Cố Định Chung Cho Mọi Màn Hình -->
   <button
     id="menu-toggle-btn"
     type="button"
     aria-label="Open Settings"
-    class="font-pixel aspect-square h-12 md:h-14 bg-white text-black border-4 border-black shadow-[4px_4px_0_0_#000] hover:bg-slate-100 flex flex-col justify-center items-center gap-1.5 active:translate-y-[2px] active:shadow-[2px_2px_0_0_#000] transition-all"
+    class="font-pixel aspect-square h-[6vh] max-h-12 min-h-[36px] bg-white text-black border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-slate-100 flex flex-col justify-center items-center gap-1 active:translate-y-[2px] active:shadow-none transition-all"
   >
-    <span class="w-6 h-1 bg-black"></span>
-    <span class="w-6 h-1 bg-black"></span>
-    <span class="w-6 h-1 bg-black"></span>
+    <span class="w-4 md:w-5 h-0.5 md:h-1 bg-black"></span>
+    <span class="w-4 md:w-5 h-0.5 md:h-1 bg-black"></span>
+    <span class="w-4 md:w-5 h-0.5 md:h-1 bg-black"></span>
   </button>
 
   <!-- Settings Modal -->
   <div id="settings-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
-    <div class="bg-white border-[6px] border-black shadow-[10px_10px_0_0_#000] w-[440px] max-w-[90vw] p-0 flex flex-col font-pixel">
+    <div class="bg-white border-[5px] border-black shadow-[8px_8px_0_0_#000] w-[420px] max-w-[90vw] p-0 flex flex-col font-pixel">
       
-      <div class="bg-pink-500 text-white px-4 py-2.5 flex justify-between items-center border-b-[4px] border-black">
-        <div class="flex items-center gap-2.5">
-          <svg class="w-6 h-6 fill-current" viewBox="0 0 16 16">
+      <div class="bg-pink-500 text-white px-4 py-2 flex justify-between items-center border-b-[4px] border-black">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 fill-current" viewBox="0 0 16 16">
             <path d="M6 0h4v2h2v2h2v4h2v4h-2v2h-2v2h-4v-2h-2v-2h-2v-4h-2v-4h2v-2h2v-2h2v-2zm1 3h-2v2h-2v2h-2v4h2v2h2v2h2v-2h2v-2h2v-4h-2v-2h-2v-2h-2v-2z"/>
           </svg>
-          <span class="font-bold text-2xl tracking-wider">CÀI ĐẶT TRÒ CHƠI</span>
+          <span class="font-bold text-xl md:text-2xl tracking-wider">CÀI ĐẶT TRÒ CHƠI</span>
         </div>
-        <button id="close-settings-btn" class="w-7 h-7 bg-red-500 text-white border-[3px] border-black shadow-[2px_2px_0_0_#000] active:translate-y-[2px] active:shadow-none hover:bg-red-400 text-lg font-bold flex items-center justify-center transition-all">✕</button>
+        <button id="close-settings-btn" class="w-7 h-7 bg-red-500 text-white border-[3px] border-black shadow-[2px_2px_0_0_#000] active:translate-y-[2px] active:shadow-none hover:bg-red-400 text-base font-bold flex items-center justify-center transition-all">✕</button>
       </div>
 
-      <div class="p-6 flex flex-col gap-5 bg-white">
-        <div class="flex justify-between items-center bg-slate-100 border-[3px] border-black p-4 shadow-[3px_3px_0_0_#000]">
-          <div class="flex items-center gap-3.5">
-            <svg class="w-8 h-8 fill-current text-indigo-600 shrink-0" viewBox="0 0 16 16">
+      <div class="p-4 md:p-5 flex flex-col gap-3 md:gap-4 bg-white">
+        <div class="flex justify-between items-center bg-slate-100 border-[3px] border-black p-3 shadow-[3px_3px_0_0_#000]">
+          <div class="flex items-center gap-3">
+            <svg class="w-6 h-6 fill-current text-indigo-600 shrink-0" viewBox="0 0 16 16">
               <path d="M6 2h4v8.171a3.001 3.001 0 1 0 2 2.829v-8.171h-4v-5h-2v11.171a3.001 3.001 0 1 0 2 2.829v-8.999z"/>
             </svg>
-            <span class="text-3xl font-bold tracking-wide">NHẠC NỀN (BGM)</span>
+            <span class="text-xl md:text-2xl font-bold tracking-wide">NHẠC NỀN (BGM)</span>
           </div>
-          <button id="toggle-bgm" class="px-5 py-2 text-2xl font-bold bg-emerald-400 text-black border-[3px] border-black shadow-[3px_3px_0_0_#000] active:translate-y-[2px] active:shadow-none transition-all">ON</button>
+          <button id="toggle-bgm" class="px-4 py-1 text-xl font-bold bg-emerald-400 text-black border-[3px] border-black shadow-[2px_2px_0_0_#000] active:translate-y-[2px] active:shadow-none transition-all">ON</button>
         </div>
 
-        <div class="flex justify-between items-center bg-slate-100 border-[3px] border-black p-4 shadow-[3px_3px_0_0_#000]">
-          <div class="flex items-center gap-3.5">
-            <svg class="w-8 h-8 fill-current text-indigo-600 shrink-0" viewBox="0 0 16 16">
+        <div class="flex justify-between items-center bg-slate-100 border-[3px] border-black p-3 shadow-[3px_3px_0_0_#000]">
+          <div class="flex items-center gap-3">
+            <svg class="w-6 h-6 fill-current text-indigo-600 shrink-0" viewBox="0 0 16 16">
               <path d="M2 5h3v6h-3v-6zm3-2h2v10h-2v-10zm2-2h2v14h-2v-14zm4 3h2v2h-2v-2zm0 6h2v2h-2v-2zm2-4h2v6h-2v-6z"/>
             </svg>
-            <span class="text-3xl font-bold tracking-wide">HIỆU ỨNG (SFX)</span>
+            <span class="text-xl md:text-2xl font-bold tracking-wide">HIỆU ỨNG (SFX)</span>
           </div>
-          <button id="toggle-sfx" class="px-5 py-2 text-2xl font-bold bg-emerald-400 text-black border-[3px] border-black shadow-[3px_3px_0_0_#000] active:translate-y-[2px] active:shadow-none transition-all">ON</button>
+          <button id="toggle-sfx" class="px-4 py-1 text-xl font-bold bg-emerald-400 text-black border-[3px] border-black shadow-[2px_2px_0_0_#000] active:translate-y-[2px] active:shadow-none transition-all">ON</button>
         </div>
       </div>
     </div>
   </div>
 
-  <main class="w-full h-screen overflow-hidden">
+  <main class="w-full h-screen overflow-hidden flex flex-col">
     <!-- Home Screen -->
-    <section id="home-screen" class="w-full h-screen flex flex-col items-center justify-center gap-8 p-8">
-      <img src="assets/together.png" alt="Ginger Cat and Gray Cat together" class="w-full max-w-3xl max-h-[65vh] object-contain" />
-      <button id="home-start-btn" type="button" class="font-pixel px-12 py-6 text-3xl md:text-5xl font-bold bg-pink-500 text-white border-4 md:border-[6px] border-black shadow-[6px_6px_0_0_#000] md:shadow-[8px_8px_0_0_#000] hover:bg-pink-400 active:translate-y-[4px] active:shadow-none transition-all duration-100 tracking-wide">
+    <section id="home-screen" class="w-full h-full flex flex-col items-center justify-center gap-[3vh] p-[2vh]">
+      <img src="assets/together.png" alt="Ginger Cat and Gray Cat together" class="w-full max-w-lg h-[50vh] object-contain drop-shadow-md" />
+      <button id="home-start-btn" type="button" class="font-pixel px-[4vw] py-[1.8vh] text-[clamp(1.5rem,3.5vh,2.5rem)] font-bold bg-pink-500 text-white border-[4px] border-black shadow-[5px_5px_0_0_#000] hover:bg-pink-400 active:translate-y-[3px] active:shadow-none transition-all duration-100 tracking-wide">
         BẮT ĐẦU
       </button>
     </section>
 
     <!-- Intro Screen -->
-    <section id="intro-screen" class="hidden w-full min-h-screen flex flex-col items-center justify-center p-4 md:p-8 relative">
-      <div id="intro-step-content" class="flex-1 w-full flex items-center justify-center"></div>
-      <button id="intro-previous-btn" type="button" class="hidden font-pixel font-bold absolute bottom-6 left-4 md:bottom-12 md:left-12 text-xl md:text-4xl px-6 py-4 md:px-10 md:py-5 bg-slate-400 text-black border-4 md:border-[6px] border-black shadow-[4px_4px_0_0_#000] md:shadow-[8px_8px_0_0_#000] hover:bg-slate-300 active:translate-y-[4px] active:shadow-none transition-all duration-100">
+    <section id="intro-screen" class="hidden w-full h-full flex flex-col items-center justify-center p-[2vh] relative box-border overflow-hidden">
+      <div id="intro-step-content" class="flex-1 w-full flex items-center justify-center min-h-0"></div>
+      <button id="intro-previous-btn" type="button" class="hidden font-pixel font-bold absolute bottom-[2vh] left-[2vh] text-[clamp(1rem,2.2vh,1.5rem)] px-[2vw] py-[1vh] bg-slate-400 text-black border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-slate-300 active:translate-y-[2px] active:shadow-none transition-all">
         🡨 Quay lại
       </button>
-      <button id="intro-next-btn" type="button" class="font-pixel font-bold absolute bottom-6 right-4 md:bottom-12 md:right-12 text-xl md:text-4xl px-6 py-4 md:px-10 md:py-5 bg-pink-500 text-white border-4 md:border-[6px] border-black shadow-[4px_4px_0_0_#000] md:shadow-[8px_8px_0_0_#000] hover:bg-pink-400 active:translate-y-[4px] active:shadow-none transition-all duration-100">
+      <button id="intro-next-btn" type="button" class="font-pixel font-bold absolute bottom-[2vh] right-[2vh] text-[clamp(1rem,2.2vh,1.5rem)] px-[2.5vw] py-[1vh] bg-pink-500 text-white border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-pink-400 active:translate-y-[2px] active:shadow-none transition-all">
         Tiếp tục ➔
       </button>
     </section>
 
     <!-- QUIZ SCREEN -->
-    <section id="quiz-card" class="hidden w-full h-screen overflow-hidden flex flex-col p-3 md:p-6 gap-3 md:gap-5 box-border">
+    <section id="quiz-card" class="hidden w-full h-full flex flex-col p-[1.5vh] gap-[1.2vh] box-border overflow-hidden min-h-0">
       
-      <!-- HEADER: Racing Track -->
-      <header class="shrink-0 w-full flex items-stretch gap-3 md:gap-5 z-10 pr-16 md:pr-20">
-        <div id="racing-track" class="flex-1 bg-white border-4 md:border-[6px] border-black shadow-[4px_4px_0_0_#000] md:shadow-[8px_8px_0_0_#000] p-2 md:p-4 flex flex-col justify-center">
-          <div class="flex justify-between items-end px-3 md:px-6 mb-[-10px] md:mb-[-14px] relative z-20 pointer-events-none">
-            <img src="assets/bakery.png" alt="Bakery milestone" class="w-8 h-8 md:w-16 md:h-16 object-contain" />
-            <img src="assets/house.png" alt="Shared finish milestone" class="w-8 h-8 md:w-16 md:h-16 object-contain" />
+      <!-- HEADER: Racing Track đã scale to và tách rời icon -->
+      <header class="shrink-0 w-full flex items-stretch gap-2 z-10 pr-16 md:pr-20">
+        <div id="racing-track" class="flex-1 bg-white border-[3px] md:border-[5px] border-black shadow-[4px_4px_0_0_#000] px-4 py-2 flex flex-col justify-center">
+          <!-- Icon Cột mốc: Đứng độc lập phía trên làn chạy -->
+          <div class="flex justify-between items-end px-2 mb-1 relative z-20 pointer-events-none">
+            <img src="assets/bakery.png" alt="Bakery milestone" class="h-[4.5vh] max-h-12 w-auto object-contain drop-shadow-sm" />
+            <img src="assets/house.png" alt="Shared finish milestone" class="h-[4.5vh] max-h-12 w-auto object-contain drop-shadow-sm" />
           </div>
-          <div class="flex flex-col gap-2 md:gap-3 relative z-10">
-            <div class="relative h-8 md:h-14 bg-sky-50 border-2 md:border-4 border-black">
-              <div class="absolute inset-x-3 md:inset-x-6 top-1/2 -translate-y-1/2 border-t-2 md:border-t-4 border-dashed border-slate-400"></div>
-              <img id="graycat-racer" src="assets/graycat_running.png" alt="Gray Cat racer" class="absolute top-1/2 -translate-y-1/2 w-10 h-10 md:w-20 md:h-20 object-contain transition-all duration-500 ease-out z-30 drop-shadow-sm" style="left: 0%" />
+          <!-- Hai làn chạy: Tăng độ cao to rõ -->
+          <div class="flex flex-col gap-2 relative z-10">
+            <div class="relative h-[4.5vh] min-h-[30px] max-h-14 bg-sky-50 border-2 md:border-[3px] border-black">
+              <div class="absolute inset-x-3 top-1/2 -translate-y-1/2 border-t-2 md:border-t-[3px] border-dashed border-slate-400"></div>
+              <img id="graycat-racer" src="assets/graycat_running.png" alt="Gray Cat racer" class="absolute top-1/2 -translate-y-1/2 h-[5.5vh] max-h-16 w-auto object-contain transition-all duration-500 ease-out z-30 drop-shadow-md" style="left: 0%" />
             </div>
-            <div class="relative h-8 md:h-14 bg-pink-50 border-2 md:border-4 border-black">
-              <div class="absolute inset-x-3 md:inset-x-6 top-1/2 -translate-y-1/2 border-t-2 md:border-t-4 border-dashed border-slate-400"></div>
-              <img id="gingercat-racer" src="assets/gingercat_walk.png" alt="Ginger Cat racer" class="absolute top-1/2 -translate-y-1/2 w-10 h-10 md:w-20 md:h-20 object-contain transition-all duration-500 ease-out z-30 drop-shadow-sm" style="left: 0%" />
+            <div class="relative h-[4.5vh] min-h-[30px] max-h-14 bg-pink-50 border-2 md:border-[3px] border-black">
+              <div class="absolute inset-x-3 top-1/2 -translate-y-1/2 border-t-2 md:border-t-[3px] border-dashed border-slate-400"></div>
+              <img id="gingercat-racer" src="assets/gingercat_walk.png" alt="Ginger Cat racer" class="absolute top-1/2 -translate-y-1/2 h-[5.5vh] max-h-16 w-auto object-contain transition-all duration-500 ease-out z-30 drop-shadow-md" style="left: 0%" />
             </div>
           </div>
         </div>
       </header>
-
-      <!-- MAIN BODY -->
-      <div class="flex-1 flex flex-col xl:flex-row gap-4 md:gap-6 min-h-0 w-full">
+      <!-- MAIN BODY (Chia cột tự động từ md, quản lý độ cao với min-h-0) -->
+      <div class="flex-1 flex flex-col md:flex-row gap-[1.5vh] min-h-0 w-full">
         
         <!-- CỘT TRÁI: Quiz Core -->
-        <div class="flex-1 xl:flex-[3.5] bg-white border-4 md:border-[6px] border-black shadow-[4px_4px_0_0_#000] md:shadow-[8px_8px_0_0_#000] p-4 md:p-8 flex flex-col min-h-0 gap-4 md:gap-6">
-          <div class="shrink-0 flex flex-col gap-2 md:gap-4">
+        <div class="flex-1 md:flex-[3] bg-white border-[3px] md:border-[5px] border-black shadow-[4px_4px_0_0_#000] p-[1.8vh] flex flex-col min-h-0 gap-[1.2vh]">
+          
+          <div class="shrink-0 flex flex-col gap-[0.8vh]">
             <div class="flex items-center justify-between px-1">
-              <div id="progress-indicator" class="font-pixel font-bold text-lg md:text-3xl text-indigo-600 tracking-wide">Question 1 of 10</div>
-              <div id="score-indicator" class="font-pixel font-bold text-lg md:text-3xl text-emerald-600 tracking-wide">Score: 0</div>
+              <div id="progress-indicator" class="font-pixel font-bold text-[clamp(1.2rem,2.8vh,2rem)] text-indigo-600 tracking-wide">
+                Câu hỏi 1 / 10
+              </div>
+              <div id="score-indicator" class="font-pixel font-bold text-[clamp(1.2rem,2.8vh,2rem)] text-emerald-600 tracking-wide">
+                Điểm: 0
+              </div>
             </div>
-            <div class="flex items-center gap-3 md:gap-6 mt-1 px-1">
-              <span class="font-pixel font-bold text-base md:text-2xl text-slate-800 whitespace-nowrap">Thời gian</span>
-              <div class="flex-1 h-3 md:h-5 bg-slate-200 border-2 md:border-[3px] border-black overflow-hidden relative">
+            <div class="flex items-center gap-3 px-1">
+              <span class="font-pixel font-bold text-[clamp(1.1rem,2.4vh,1.6rem)] text-slate-800 whitespace-nowrap">
+                Thời gian
+              </span>
+              <div class="flex-1 h-[2vh] min-h-[12px] max-h-5 bg-slate-200 border-2 md:border-[3px] border-black overflow-hidden relative">
                 <div id="timer-bar" class="h-full bg-indigo-500 transition-[width] duration-1000 ease-linear" style="width: 100%"></div>
               </div>
-              <div id="timer-text" class="font-pixel text-xl md:text-4xl font-bold text-slate-800 tabular-nums whitespace-nowrap">15s</div>
+              <div id="timer-text" class="font-pixel text-[clamp(1.3rem,3vh,2.2rem)] font-bold text-slate-800 tabular-nums whitespace-nowrap">
+                15s
+              </div>
             </div>
           </div>
 
-          <div class="shrink-0 flex items-center justify-start min-h-[4rem] md:min-h-[5rem] overflow-y-auto px-1 md:px-2 py-2">
-            <h1 id="question-text" class="font-pixel text-xl md:text-3xl lg:text-[2.2rem] font-bold text-slate-900 text-left leading-relaxed">
+          <div class="shrink-0 flex items-center justify-start min-h-[5.5vh] px-1 py-1">
+            <h1 id="question-text" class="font-pixel text-[clamp(1.35rem,3.4vh,2.5rem)] font-bold text-slate-900 text-left leading-snug">
               Loading question...
             </h1>
           </div>
 
-          <div id="options-container" class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-6 min-h-0 pb-1"></div>
+          <!-- Container 4 nút đáp án co giãn động -->
+          <div id="options-container" class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-[1.2vh] min-h-0"></div>
         </div>
 
-        <!-- CỘT PHẢI: Mascot Mèo Xám & Khung Chat -->
-        <aside id="mascot-status-panel" class="shrink-0 xl:flex-[1] xl:max-w-[440px] flex flex-row xl:flex-col items-center justify-between bg-slate-800 border-4 md:border-[6px] border-black shadow-[4px_4px_0_0_#000] md:shadow-[8px_8px_0_0_#000] p-4 md:p-6 lg:p-8 min-h-0 gap-4 md:gap-6">
-          <div class="shrink-0 xl:flex-1 flex items-center justify-center w-32 xl:w-full min-h-0 py-2 xl:py-0">
-            <img id="mascot-image" src="assets/graycat.png" alt="Gray Cat status" class="w-full h-full max-h-[140px] xl:max-h-[380px] object-contain drop-shadow-[3px_3px_0_rgba(0,0,0,0.6)]" />
+        <!-- CỘT PHẢI: Mascot Mèo Xám & Khung Chat kéo sát nhau -->
+        <aside id="mascot-status-panel" class="shrink-0 md:flex-[1.2] md:max-w-[400px] flex flex-row md:flex-col items-center justify-center bg-slate-800 border-[3px] md:border-[5px] border-black shadow-[4px_4px_0_0_#000] p-[1.8vh] min-h-0 gap-[1.5vh]">
+          <!-- Bé Mèo: Căn sát xuống dưới gần khung chat -->
+          <div class="shrink-0 flex items-end justify-center w-28 md:w-full min-h-0">
+            <img id="mascot-image" src="assets/graycat.png" alt="Gray Cat status" class="h-auto max-h-[25vh] md:max-h-[36vh] w-auto object-contain drop-shadow-[4px_4px_0_rgba(0,0,0,0.6)]" />
           </div>
-          <div class="flex-1 xl:flex-none xl:w-full flex items-center justify-center">
-            <div id="mascot-speech" class="w-full bg-white border-2 md:border-[4px] border-black shadow-[2px_2px_0_0_#000] md:shadow-[4px_4px_0_0_#000] p-4 md:p-5 lg:p-6 font-pixel font-bold text-lg md:text-2xl lg:text-3xl text-slate-800 text-left xl:text-center leading-relaxed overflow-y-auto">
+          <!-- Bubble Chat: Nằm sát ngay dưới bé Mèo -->
+          <div class="flex-1 md:flex-none w-full flex items-start justify-center min-h-0">
+            <div id="mascot-speech" class="w-full min-h-[9vh] max-h-[14vh] bg-white border-2 md:border-[4px] border-black shadow-[4px_4px_0_0_#000] p-[1.2vh] font-pixel font-bold text-[clamp(1.4rem,3.2vh,2.3rem)] text-slate-800 flex items-center justify-center text-center leading-snug overflow-y-auto">
               Sẵn sàng về nhà mừng sinh nhật Mèo Cam chưa?
             </div>
           </div>
@@ -215,44 +222,42 @@
       </div>
     </section>
 
-    <!-- Results Screen (CHỈ SCALE RIÊNG MÀN HÌNH ENDING: Giới hạn ảnh together.png max-h-[21vh] để nằm gọn trong 1 khung nhìn) -->
     <!-- Results Screen -->
-    <section id="completion-screen" class="hidden w-full h-screen overflow-hidden flex flex-col p-4 box-border justify-center">
-      <div class="w-full max-w-4xl mx-auto flex flex-col items-center justify-center gap-4 my-auto">
+    <section id="completion-screen" class="hidden w-full h-full overflow-hidden flex flex-col p-[2vh] box-border justify-center">
+      <div class="w-full max-w-3xl mx-auto flex flex-col items-center justify-center gap-[2vh] my-auto">
         
-        <div id="result-stats" class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 w-full font-pixel">
-          <div class="bg-cyan-50 border-[4px] border-black shadow-[4px_4px_0_0_#000] p-3 text-center">
-            <div class="text-4xl font-extrabold text-indigo-600" id="result-score">0</div>
-            <div class="text-lg font-bold text-slate-700">Tổng điểm</div>
+        <div id="result-stats" class="grid grid-cols-1 sm:grid-cols-3 gap-[1.5vh] w-full font-pixel">
+          <div class="bg-cyan-50 border-[3px] border-black shadow-[3px_3px_0_0_#000] p-[1.2vh] text-center">
+            <div class="text-[clamp(1.8rem,4vh,3rem)] font-extrabold text-indigo-600" id="result-score">0</div>
+            <div class="text-[clamp(1rem,2vh,1.3rem)] font-bold text-slate-700">Tổng điểm</div>
           </div>
-          <div class="bg-lime-50 border-[4px] border-black shadow-[4px_4px_0_0_#000] p-3 text-center">
-            <div class="text-4xl font-extrabold text-emerald-600" id="result-accuracy">0%</div>
-            <div class="text-lg font-bold text-slate-700">Chính xác</div>
+          <div class="bg-lime-50 border-[3px] border-black shadow-[3px_3px_0_0_#000] p-[1.2vh] text-center">
+            <div class="text-[clamp(1.8rem,4vh,3rem)] font-extrabold text-emerald-600" id="result-accuracy">0%</div>
+            <div class="text-[clamp(1rem,2vh,1.3rem)] font-bold text-slate-700">Chính xác</div>
           </div>
-          <div class="bg-amber-50 border-[4px] border-black shadow-[4px_4px_0_0_#000] p-3 text-center">
-            <div class="text-4xl font-extrabold text-amber-600" id="result-time">0s</div>
-            <div class="text-lg font-bold text-slate-700">Thời gian</div>
+          <div class="bg-amber-50 border-[3px] border-black shadow-[3px_3px_0_0_#000] p-[1.2vh] text-center">
+            <div class="text-[clamp(1.8rem,4vh,3rem)] font-extrabold text-amber-600" id="result-time">0s</div>
+            <div class="text-[clamp(1rem,2vh,1.3rem)] font-bold text-slate-700">Thời gian</div>
           </div>
         </div>
 
         <div id="ending-content" class="w-full flex items-center justify-center">
-          <!-- Phóng to ảnh together.png vừa vặn hoàn hảo với max-h-[42vh] -->
-          <div class="ending-message-in flex flex-col items-center gap-2 text-center">
-            <img src="assets/together.png" alt="Ginger Cat and Gray Cat celebrating together" class="w-full max-w-3xl max-h-[42vh] object-contain drop-shadow-lg" />
-            <div class="font-pixel font-bold text-3xl md:text-5xl text-pink-600 drop-shadow-sm">Happy Birthday Mèo Cam!</div>
+          <div class="ending-message-in flex flex-col items-center gap-[1vh] text-center">
+            <img src="assets/together.png" alt="Ginger Cat and Gray Cat celebrating together" class="w-full max-w-md h-[30vh] object-contain drop-shadow-md" />
+            <div class="font-pixel font-bold text-[clamp(1.8rem,4vh,3.2rem)] text-pink-600 drop-shadow-sm">Happy Birthday Mèo Cam!</div>
           </div>
         </div>
 
-        <div id="ending-dialogue-container" class="hidden w-full overflow-hidden flex flex-col gap-3"></div>
+        <div id="ending-dialogue-container" class="hidden w-full overflow-hidden flex flex-col gap-[1vh]"></div>
 
-        <div class="flex flex-wrap items-center justify-center gap-4 mt-2">
-          <button id="ending-next-btn" type="button" class="hidden font-pixel font-bold px-8 py-3 text-2xl bg-pink-500 text-white border-[4px] border-black shadow-[4px_4px_0_0_#000] hover:bg-pink-400 active:translate-y-[4px] active:shadow-none transition-all duration-100">
+        <div class="flex flex-wrap items-center justify-center gap-3 mt-1">
+          <button id="ending-next-btn" type="button" class="hidden font-pixel font-bold px-[3vw] py-[1vh] text-[clamp(1.1rem,2.2vh,1.6rem)] bg-pink-500 text-white border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-pink-400 active:translate-y-[2px] active:shadow-none transition-all">
             Tiếp tục
           </button>
-          <button id="play-again-btn" type="button" class="font-pixel font-bold px-6 py-2.5 text-2xl bg-lime-400 text-black border-[4px] border-black shadow-[4px_4px_0_0_#000] hover:bg-lime-300 active:translate-y-[4px] active:shadow-none transition-all duration-100">
+          <button id="play-again-btn" type="button" class="font-pixel font-bold px-[3vw] py-[1vh] text-[clamp(1.1rem,2.2vh,1.6rem)] bg-lime-400 text-black border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-lime-300 active:translate-y-[2px] active:shadow-none transition-all">
             Chơi Lại
           </button>
-          <button id="home-btn" type="button" class="hidden font-pixel font-bold px-6 py-2.5 text-2xl bg-sky-300 text-black border-[4px] border-black shadow-[4px_4px_0_0_#000] hover:bg-sky-200 active:translate-y-[4px] active:shadow-none transition-all duration-100">
+          <button id="home-btn" type="button" class="hidden font-pixel font-bold px-[3vw] py-[1vh] text-[clamp(1.1rem,2.2vh,1.6rem)] bg-sky-300 text-black border-[3px] border-black shadow-[3px_3px_0_0_#000] hover:bg-sky-200 active:translate-y-[2px] active:shadow-none transition-all">
             Trang Chủ
           </button>
         </div>

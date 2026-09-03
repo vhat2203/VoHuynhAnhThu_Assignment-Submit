@@ -122,33 +122,28 @@
   const OPTION_BASE_CLASSES = [
     "w-full",
     "h-full", 
-    "p-4", 
-    "md:p-8",      
+    "min-h-0",
+    "p-[1.2vh]",
     "font-pixel",
     "font-bold",
-    "text-lg", 
-    "sm:text-xl",
-    "md:text-3xl",  
-    "lg:text-4xl",
-    "leading-tight",
+    "text-[clamp(1.25rem,3vh,2.2rem)]", // Đã tăng size chữ to rõ, dễ đọc
+    "leading-snug",
     "break-words",
     "flex",
     "items-center",
     "justify-center", 
     "text-center",    
     "border-[3px]",
-    "md:border-[6px]",
+    "md:border-[5px]",
     "border-black",
     "shadow-[4px_4px_0_0_#000]",
-    "md:shadow-[8px_8px_0_0_#000]",
     "bg-white",
     "hover:bg-indigo-50",
-    "active:translate-y-[4px]", 
-    "md:active:translate-y-[8px]", 
+    "active:translate-y-[2px]", 
     "active:shadow-none",
     "transition-all",
     "duration-100",
-    "text-slate-600", 
+    "text-slate-900", 
     "focus:outline-none",
   ];
 
@@ -216,7 +211,7 @@
   }
 
   function updateScoreUI() {
-    scoreEl.textContent = `Score: ${state.score}`;
+    scoreEl.textContent = `Điểm: ${state.score}`;
   }
 
   function updateRacingMap(isCorrect) {
@@ -259,7 +254,7 @@
 
     document.body.classList.remove("is-loading");
     updateMascotState("idle");
-    progressEl.textContent = `Question ${state.currentIndex + 1} of ${TOTAL_QUESTIONS}`;
+    progressEl.textContent = `Câu hỏi ${state.currentIndex + 1} / ${TOTAL_QUESTIONS}`;
     questionEl.textContent = q.question;
 
     optionsEl.innerHTML = "";
@@ -631,7 +626,7 @@
 
   function init() {
     if (!Array.isArray(questions) || questions.length !== 10) {
-      questionEl.textContent = "Error: questions dataset must contain exactly 10 questions.";
+      questionEl.textContent = "Lỗi: Bộ câu hỏi cần có chính xác 10 câu.";
       return;
     }
 
