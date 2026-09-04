@@ -1,0 +1,2 @@
+## Ghi chú về trải nghiệm Agentic Coding với Claude Code
+Việc điều hướng Claude Code xây dựng logic trò chơi diễn ra khá suôn sẻ nhờ cấu trúc `CLAUDE.md`. Tuy nhiên, phần khó nhất là tinh chỉnh giao diện responsive cho các khung hình động trên nhiều thiết bị và đối phó với giới hạn credit (rate limit) của bản free.
